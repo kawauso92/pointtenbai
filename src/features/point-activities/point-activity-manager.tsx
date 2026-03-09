@@ -59,20 +59,43 @@ function toFormValues(record: PointActivityRow): PointActivityFormValues {
   };
 }
 
+function getYearOptions(records: PointActivityRow[]) {
+  return Array.from(new Set(records.map((record) => record.activity_date.slice(0, 4)))).sort((left, right) => right.localeCompare(left));
+}
+
 export function PointActivityManager({ isConfigured, pointSites, pointActivities }: PointActivityManagerProps) {
   const router = useRouter();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [tab, setTab] = useState<"active" | "completed">("active");
+  const [yearFilter, setYearFilter] = useState("all");
+  const [monthFilter, setMonthFilter] = useState("all");
+  const [siteFilter, setSiteFilter] = useState("all");
   const [isPending, startTransition] = useTransition();
   const editingRecord = pointActivities.find((record) => record.id === editingId) ?? null;
   const form = useForm<PointActivityFormValues>({
     resolver: zodResolver(pointActivityFormSchema),
     defaultValues: createEmptyValues(),
   });
-  const summaryItems = computePointActivitySummary(pointActivities);
-  const tabCounts = getPointActivityTabCounts(pointActivities);
-  const visibleRecords = filterPointActivitiesByTab(pointActivities, tab);
+  const filteredRecords = pointActivities.filter((record) => {
+    if (yearFilter !== "all" && record.activity_date.slice(0, 4) !== yearFilter) {
+      return false;
+    }
+
+    if (monthFilter !== "all" && record.activity_date.slice(5, 7) !== monthFilter) {
+      return false;
+    }
+
+    if (siteFilter !== "all" && record.point_site_id !== siteFilter) {
+      return false;
+    }
+
+    return true;
+  });
+  const summaryItems = computePointActivitySummary(filteredRecords);
+  const tabCounts = getPointActivityTabCounts(filteredRecords);
+  const visibleRecords = filterPointActivitiesByTab(filteredRecords, tab);
+  const yearOptions = getYearOptions(pointActivities);
 
   useEffect(() => {
     form.reset(editingRecord ? toFormValues(editingRecord) : createEmptyValues());
@@ -103,12 +126,12 @@ export function PointActivityManager({ isConfigured, pointSites, pointActivities
       <div className="grid gap-5 xl:grid-cols-[1.08fr,0.92fr]">
         <SectionCard
           title="案件一覧"
-          description="完了チェックを基準に、アクティブと完了を切り替えて管理します。"
+          description="進行中と完了済を切り替えながら、見込みと実利益の元データを管理します。"
           action={
             <SegmentedTabs
               items={[
-                { value: "active", label: "アクティブ", count: tabCounts.active },
-                { value: "completed", label: "完了", count: tabCounts.completed },
+                { value: "active", label: "進行中", count: tabCounts.active },
+                { value: "completed", label: "完了済", count: tabCounts.completed },
               ]}
               value={tab}
               onChange={setTab}
@@ -117,20 +140,59 @@ export function PointActivityManager({ isConfigured, pointSites, pointActivities
         >
           {!isConfigured ? <ConfigurationNotice /> : null}
 
+          <div className="mt-4 grid gap-3 md:grid-cols-3">
+            <Field label="年">
+              <Select value={yearFilter} onChange={(event) => setYearFilter(event.target.value)}>
+                <option value="all">すべて</option>
+                {yearOptions.map((year) => <option key={year} value={year}>{year}年</option>)}
+              </Select>
+            </Field>
+            <Field label="月">
+              <Select value={monthFilter} onChange={(event) => setMonthFilter(event.target.value)}>
+                <option value="all">すべて</option>
+                {Array.from({ length: 12 }, (_, index) => {
+                  const month = String(index + 1).padStart(2, "0");
+                  return <option key={month} value={month}>{index + 1}月</option>;
+                })}
+              </Select>
+            </Field>
+            <Field label="ポイントサイト">
+              <Select value={siteFilter} onChange={(event) => setSiteFilter(event.target.value)}>
+                <option value="all">すべて</option>
+                {pointSites.map((site) => <option key={site.id} value={site.id}>{site.name}</option>)}
+              </Select>
+            </Field>
+          </div>
+
+          <div className="mt-3 flex flex-wrap gap-2 text-xs text-ink-sub">
+            <span className="rounded-full border border-border-theme bg-surface-alt/70 px-3 py-1.5">表示件数 {visibleRecords.length}</span>
+            <button
+              type="button"
+              className="rounded-full border border-border-theme bg-surface px-3 py-1.5 transition hover:bg-surface-alt"
+              onClick={() => {
+                setYearFilter("all");
+                setMonthFilter("all");
+                setSiteFilter("all");
+              }}
+            >
+              フィルタをリセット
+            </button>
+          </div>
+
           <div className="mt-4 space-y-3 md:hidden">
             {visibleRecords.map((record) => (
               <div
                 key={record.id}
                 className={[
                   "rounded-[26px] border p-4",
-                  record.is_completed ? "border-emerald-100 bg-emerald-50/65" : "border-black/5 bg-canvas/55",
+                  record.is_completed ? "border-profit/20 bg-profit-bg" : "border-border-theme bg-surface-alt/70",
                 ].join(" ")}
               >
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-sm text-ink/52">{formatDate(record.activity_date)}</p>
+                    <p className="text-sm text-ink-sub">{formatDate(record.activity_date)}</p>
                     <h3 className="mt-1 text-[15px] font-semibold">{record.title}</h3>
-                    <p className="mt-1 text-sm text-ink/62">{record.point_site?.name ?? "-"}</p>
+                    <p className="mt-1 text-sm text-ink-sub">{record.point_site?.name ?? "-"}</p>
                   </div>
                   <StatusBadge tone={record.is_completed ? "success" : "warning"}>
                     {record.is_completed ? "完了" : "見込み"}
@@ -138,7 +200,7 @@ export function PointActivityManager({ isConfigured, pointSites, pointActivities
                 </div>
                 <p className="mt-4 text-xl font-semibold tracking-tight">{formatCurrency(record.reward_amount)}</p>
                 <div className="mt-4 flex flex-wrap items-center gap-2">
-                  <label className="inline-flex items-center gap-2 rounded-full border border-black/5 bg-white/88 px-3 py-2 text-xs font-medium">
+                  <label className="inline-flex items-center gap-2 rounded-full border border-border-theme bg-surface px-3 py-2 text-xs font-medium">
                     <input
                       type="checkbox"
                       className="h-4 w-4 rounded"
@@ -183,11 +245,11 @@ export function PointActivityManager({ isConfigured, pointSites, pointActivities
                 </div>
               </div>
             ))}
-            {visibleRecords.length === 0 ? <p className="text-sm text-ink/60">該当データがありません。</p> : null}
+            {visibleRecords.length === 0 ? <p className="text-sm text-ink-sub">該当データがありません。</p> : null}
           </div>
 
-          <div className="mt-4 hidden overflow-hidden rounded-[28px] border border-black/5 md:block">
-            <div className="grid grid-cols-[0.92fr,1fr,1.5fr,0.82fr,0.78fr,0.92fr,1.2fr] gap-3 bg-canvas/80 px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-ink/55">
+          <div className="mt-4 hidden overflow-hidden rounded-[28px] border border-border-theme md:block">
+            <div className="grid grid-cols-[0.92fr,1fr,1.5fr,0.82fr,0.78fr,0.92fr,1.2fr] gap-3 bg-surface-alt px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-ink-sub">
               <span>実施日</span>
               <span>サイト</span>
               <span>案件名</span>
@@ -196,13 +258,13 @@ export function PointActivityManager({ isConfigured, pointSites, pointActivities
               <span>完了日</span>
               <span>操作</span>
             </div>
-            <div className="divide-y divide-black/5">
+            <div className="divide-y divide-border-theme">
               {visibleRecords.map((record) => (
                 <div
                   key={record.id}
                   className={[
                     "grid grid-cols-[0.92fr,1fr,1.5fr,0.82fr,0.78fr,0.92fr,1.2fr] gap-3 px-4 py-3.5 text-sm",
-                    record.is_completed ? "bg-emerald-50/55" : "bg-white/72",
+                    record.is_completed ? "bg-profit-bg" : "bg-surface/75",
                   ].join(" ")}
                 >
                   <span>{formatDate(record.activity_date)}</span>
@@ -214,7 +276,7 @@ export function PointActivityManager({ isConfigured, pointSites, pointActivities
                   </span>
                   <span>{formatDate(record.completed_date)}</span>
                   <span className="flex flex-wrap items-center gap-2">
-                    <label className="inline-flex items-center gap-2 rounded-full border border-black/5 bg-white/90 px-3 py-1.5 text-xs font-medium">
+                    <label className="inline-flex items-center gap-2 rounded-full border border-border-theme bg-surface px-3 py-1.5 text-xs font-medium">
                       <input
                         type="checkbox"
                         className="h-4 w-4 rounded"
@@ -259,7 +321,7 @@ export function PointActivityManager({ isConfigured, pointSites, pointActivities
                   </span>
                 </div>
               ))}
-              {visibleRecords.length === 0 ? <div className="bg-white/72 px-4 py-8 text-sm text-ink/60">該当データがありません。</div> : null}
+              {visibleRecords.length === 0 ? <div className="bg-surface/75 px-4 py-8 text-sm text-ink-sub">該当データがありません。</div> : null}
             </div>
           </div>
         </SectionCard>
@@ -293,7 +355,7 @@ export function PointActivityManager({ isConfigured, pointSites, pointActivities
               </Field>
             </div>
 
-            <label className="flex items-center gap-3 rounded-[20px] bg-canvas/70 px-4 py-3 text-sm">
+            <label className="flex items-center gap-3 rounded-[20px] border border-border-theme bg-surface-alt/70 px-4 py-3 text-sm">
               <input type="checkbox" className="h-4 w-4 rounded" {...form.register("is_completed")} />
               完了済として扱う
             </label>
@@ -310,7 +372,7 @@ export function PointActivityManager({ isConfigured, pointSites, pointActivities
               <Textarea {...form.register("memo")} />
             </Field>
 
-            {feedback ? <p className="text-sm text-ink/70">{feedback}</p> : null}
+            {feedback ? <p className="text-sm text-ink-sub">{feedback}</p> : null}
 
             <div className="flex flex-wrap gap-3">
               <Button type="submit" disabled={isPending}>{editingRecord ? "更新する" : "追加する"}</Button>

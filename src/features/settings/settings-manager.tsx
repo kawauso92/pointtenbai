@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
@@ -98,7 +98,7 @@ export function SettingsManager({
               key={category}
               type="button"
               className={`rounded-full px-4 py-2 text-sm font-medium transition ${
-                activeCategory === category ? "bg-accent text-white" : "bg-canvas text-ink/70 hover:bg-sand"
+                activeCategory === category ? "bg-nav-active text-nav-active-text" : "bg-surface-alt text-ink-sub hover:bg-surface hover:text-ink"
               }`}
               onClick={() => {
                 setActiveCategory(category);
@@ -111,21 +111,21 @@ export function SettingsManager({
           ))}
         </div>
 
-        <div className="mt-5 overflow-hidden rounded-3xl border border-black/5">
-          <div className="hidden grid-cols-[1.6fr,0.7fr,0.7fr,1fr] gap-3 bg-canvas/80 px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-ink/55 md:grid">
+        <div className="mt-5 overflow-hidden rounded-3xl border border-border-theme">
+          <div className="hidden grid-cols-[1.6fr,0.7fr,0.7fr,1fr] gap-3 bg-surface-alt px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-ink-sub md:grid">
             <span>名称</span>
             <span>並び順</span>
             <span>状態</span>
             <span>操作</span>
           </div>
-          <div className="divide-y divide-black/5 bg-white/70">
+          <div className="divide-y divide-border-theme bg-surface/75">
             {currentItems.map((item) => (
               <div key={item.id} className="grid gap-3 px-4 py-4 md:grid-cols-[1.6fr,0.7fr,0.7fr,1fr] md:items-center">
                 <div>
                   <p className="font-medium">{item.name}</p>
-                  <p className="mt-1 text-xs text-ink/50 md:hidden">並び順: {item.sort_order}</p>
+                  <p className="mt-1 text-xs text-ink-sub md:hidden">並び順: {item.sort_order}</p>
                 </div>
-                <div className="hidden text-sm text-ink/70 md:block">{item.sort_order}</div>
+                <div className="hidden text-sm text-ink-sub md:block">{item.sort_order}</div>
                 <div>
                   <StatusBadge tone={item.is_active ? "success" : "muted"}>
                     {item.is_active ? "有効" : "無効"}
@@ -156,7 +156,7 @@ export function SettingsManager({
                 </div>
               </div>
             ))}
-            {currentItems.length === 0 ? <div className="px-4 py-8 text-sm text-ink/60">まだデータがありません。</div> : null}
+            {currentItems.length === 0 ? <div className="px-4 py-8 text-sm text-ink-sub">まだデータがありません。</div> : null}
           </div>
         </div>
       </SectionCard>
@@ -171,12 +171,12 @@ export function SettingsManager({
             <Input {...form.register("sort_order")} type="number" step="1" />
           </Field>
 
-          <label className="flex items-center gap-3 rounded-2xl bg-canvas/70 px-4 py-3 text-sm">
+          <label className="flex items-center gap-3 rounded-2xl border border-border-theme bg-surface-alt/70 px-4 py-3 text-sm">
             <input type="checkbox" className="h-4 w-4 rounded" {...form.register("is_active")} />
             登録直後から有効にする
           </label>
 
-          {feedback ? <p className="text-sm text-ink/70">{feedback}</p> : null}
+          {feedback ? <p className="text-sm text-ink-sub">{feedback}</p> : null}
 
           <div className="flex flex-wrap gap-3">
             <Button type="submit" disabled={isPending}>{editingRecord ? "更新する" : "追加する"}</Button>
@@ -197,3 +197,4 @@ export function SettingsManager({
     </div>
   );
 }
+

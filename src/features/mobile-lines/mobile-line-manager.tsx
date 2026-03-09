@@ -92,11 +92,20 @@ function toFormValues(record: MobileLineRow): MobileLineFormValues {
   };
 }
 
+function getYearOptions(records: MobileLineRow[]) {
+  return Array.from(new Set(records.map((record) => record.contract_date.slice(0, 4)))).sort((left, right) => right.localeCompare(left));
+}
+
 export function MobileLineManager({ isConfigured, carriers, mobileLines }: MobileLineManagerProps) {
   const router = useRouter();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [tab, setTab] = useState<"active" | "completed">("active");
+  const [yearFilter, setYearFilter] = useState("all");
+  const [monthFilter, setMonthFilter] = useState("all");
+  const [lineTypeFilter, setLineTypeFilter] = useState("all");
+  const [carrierFilter, setCarrierFilter] = useState("all");
+  const [contractStatusFilter, setContractStatusFilter] = useState("all");
   const [isPending, startTransition] = useTransition();
   const editingRecord = mobileLines.find((record) => record.id === editingId) ?? null;
   const form = useForm<MobileLineFormValues>({
@@ -124,9 +133,33 @@ export function MobileLineManager({ isConfigured, carriers, mobileLines }: Mobil
     },
     previewCosts,
   );
-  const summaryItems = computeMobileLineSummary(mobileLines);
-  const tabCounts = getMobileLineTabCounts(mobileLines);
-  const visibleRecords = filterMobileLinesByTab(mobileLines, tab);
+  const filteredRecords = mobileLines.filter((record) => {
+    if (yearFilter !== "all" && record.contract_date.slice(0, 4) !== yearFilter) {
+      return false;
+    }
+
+    if (monthFilter !== "all" && record.contract_date.slice(5, 7) !== monthFilter) {
+      return false;
+    }
+
+    if (lineTypeFilter !== "all" && record.line_type !== lineTypeFilter) {
+      return false;
+    }
+
+    if (carrierFilter !== "all" && record.carrier_id !== carrierFilter) {
+      return false;
+    }
+
+    if (contractStatusFilter !== "all" && record.contract_status !== contractStatusFilter) {
+      return false;
+    }
+
+    return true;
+  });
+  const summaryItems = computeMobileLineSummary(filteredRecords);
+  const tabCounts = getMobileLineTabCounts(filteredRecords);
+  const visibleRecords = filterMobileLinesByTab(filteredRecords, tab);
+  const yearOptions = getYearOptions(mobileLines);
 
   useEffect(() => {
     form.reset(editingRecord ? toFormValues(editingRecord) : createEmptyValues());
@@ -157,12 +190,12 @@ export function MobileLineManager({ isConfigured, carriers, mobileLines }: Mobil
       <div className="grid gap-5 xl:grid-cols-[1.18fr,0.82fr]">
         <SectionCard
           title="回線一覧"
-          description="完了タブは解約済みのみです。特典完了だけではアクティブに残します。"
+          description="進行中と完了済を分けつつ、特典完了と解約済を別バッジで管理します。"
           action={
             <SegmentedTabs
               items={[
-                { value: "active", label: "アクティブ", count: tabCounts.active },
-                { value: "completed", label: "完了", count: tabCounts.completed },
+                { value: "active", label: "進行中", count: tabCounts.active },
+                { value: "completed", label: "完了済", count: tabCounts.completed },
               ]}
               value={tab}
               onChange={setTab}
@@ -171,28 +204,82 @@ export function MobileLineManager({ isConfigured, carriers, mobileLines }: Mobil
         >
           {!isConfigured ? <ConfigurationNotice /> : null}
 
+          <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+            <Field label="年">
+              <Select value={yearFilter} onChange={(event) => setYearFilter(event.target.value)}>
+                <option value="all">すべて</option>
+                {yearOptions.map((year) => <option key={year} value={year}>{year}年</option>)}
+              </Select>
+            </Field>
+            <Field label="月">
+              <Select value={monthFilter} onChange={(event) => setMonthFilter(event.target.value)}>
+                <option value="all">すべて</option>
+                {Array.from({ length: 12 }, (_, index) => {
+                  const month = String(index + 1).padStart(2, "0");
+                  return <option key={month} value={month}>{index + 1}月</option>;
+                })}
+              </Select>
+            </Field>
+            <Field label="回線種別">
+              <Select value={lineTypeFilter} onChange={(event) => setLineTypeFilter(event.target.value)}>
+                <option value="all">すべて</option>
+                {lineTypeOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+              </Select>
+            </Field>
+            <Field label="キャリア">
+              <Select value={carrierFilter} onChange={(event) => setCarrierFilter(event.target.value)}>
+                <option value="all">すべて</option>
+                {carriers.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
+              </Select>
+            </Field>
+            <Field label="契約ステータス">
+              <Select value={contractStatusFilter} onChange={(event) => setContractStatusFilter(event.target.value)}>
+                <option value="all">すべて</option>
+                {contractStatusOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+              </Select>
+            </Field>
+          </div>
+
+          <div className="mt-3 flex flex-wrap gap-2 text-xs text-ink-sub">
+            <span className="rounded-full border border-border-theme bg-surface-alt/70 px-3 py-1.5">表示件数 {visibleRecords.length}</span>
+            <button
+              type="button"
+              className="rounded-full border border-border-theme bg-surface px-3 py-1.5 transition hover:bg-surface-alt"
+              onClick={() => {
+                setYearFilter("all");
+                setMonthFilter("all");
+                setLineTypeFilter("all");
+                setCarrierFilter("all");
+                setContractStatusFilter("all");
+              }}
+            >
+              フィルタをリセット
+            </button>
+          </div>
+
           <div className="mt-4 space-y-3 md:hidden">
             {visibleRecords.map((record) => {
               const rowCosts = record.monthly_costs ?? [];
               const rowTotalCost = calculateMobileLineTotalCost(record, rowCosts);
               const rowProfit = calculateMobileLineProfit(record, rowCosts);
               const cardClass = record.contract_status === "cancelled"
-                ? "border-slate-200 bg-slate-100/80"
+                ? "border-muted/20 bg-muted-bg"
                 : record.is_completed
-                  ? "border-emerald-100 bg-emerald-50/65"
-                  : "border-black/5 bg-canvas/55";
+                  ? "border-profit/20 bg-profit-bg"
+                  : "border-border-theme bg-surface-alt/70";
 
               return (
                 <div key={record.id} className={["rounded-[26px] border p-4", cardClass].join(" ")}>
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <p className="text-sm text-ink/52">{formatDate(record.contract_date)}</p>
+                      <p className="text-sm text-ink-sub">{formatDate(record.contract_date)}</p>
                       <h3 className="mt-1 text-[15px] font-semibold">{record.title}</h3>
-                      <p className="mt-1 text-sm text-ink/62">
+                      <p className="mt-1 text-sm text-ink-sub">
                         {record.carrier?.name ?? "-"} / {maskPhoneNumber(record.phone_number)}
                       </p>
                     </div>
                     <div className="flex flex-wrap justify-end gap-2">
+                      <StatusBadge tone={record.line_type === "campaign" ? "neutral" : "muted"}>{record.line_type === "campaign" ? "案件回線" : "通常回線"}</StatusBadge>
                       {record.is_completed ? <StatusBadge tone="success">特典完了</StatusBadge> : null}
                       {record.contract_status === "cancelled" ? <StatusBadge tone="muted">解約済</StatusBadge> : null}
                       {!record.is_completed && record.contract_status !== "cancelled" ? <StatusBadge tone="warning">進行中</StatusBadge> : null}
@@ -200,16 +287,16 @@ export function MobileLineManager({ isConfigured, carriers, mobileLines }: Mobil
                   </div>
                   <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
                     <div>
-                      <p className="text-ink/52">総コスト</p>
+                      <p className="text-ink-sub">総コスト</p>
                       <p className="mt-1 font-semibold">{formatCurrency(rowTotalCost)}</p>
                     </div>
                     <div>
-                      <p className="text-ink/52">利益</p>
+                      <p className="text-ink-sub">利益</p>
                       <p className="mt-1 font-semibold">{formatCurrency(rowProfit)}</p>
                     </div>
                   </div>
                   <div className="mt-4 flex flex-wrap items-center gap-2">
-                    <label className="inline-flex items-center gap-2 rounded-full border border-black/5 bg-white/88 px-3 py-2 text-xs font-medium">
+                    <label className="inline-flex items-center gap-2 rounded-full border border-border-theme bg-surface px-3 py-2 text-xs font-medium">
                       <input
                         type="checkbox"
                         className="h-4 w-4 rounded"
@@ -227,7 +314,7 @@ export function MobileLineManager({ isConfigured, carriers, mobileLines }: Mobil
                       />
                       特典
                     </label>
-                    <label className="inline-flex items-center gap-2 rounded-full border border-black/5 bg-white/88 px-3 py-2 text-xs font-medium">
+                    <label className="inline-flex items-center gap-2 rounded-full border border-border-theme bg-surface px-3 py-2 text-xs font-medium">
                       <input
                         type="checkbox"
                         className="h-4 w-4 rounded"
@@ -273,11 +360,11 @@ export function MobileLineManager({ isConfigured, carriers, mobileLines }: Mobil
                 </div>
               );
             })}
-            {visibleRecords.length === 0 ? <p className="text-sm text-ink/60">該当データがありません。</p> : null}
+            {visibleRecords.length === 0 ? <p className="text-sm text-ink-sub">該当データがありません。</p> : null}
           </div>
 
-          <div className="mt-4 hidden overflow-hidden rounded-[28px] border border-black/5 md:block">
-            <div className="grid grid-cols-[0.82fr,0.72fr,0.9fr,0.94fr,1.08fr,0.88fr,0.88fr,1.02fr,1.55fr] gap-3 bg-canvas/80 px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-ink/55">
+          <div className="mt-4 hidden overflow-hidden rounded-[28px] border border-border-theme md:block">
+            <div className="grid grid-cols-[0.82fr,0.72fr,0.9fr,0.94fr,1.08fr,0.88fr,0.88fr,1.02fr,1.55fr] gap-3 bg-surface-alt px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-ink-sub">
               <span>契約日</span>
               <span>種別</span>
               <span>キャリア</span>
@@ -288,16 +375,16 @@ export function MobileLineManager({ isConfigured, carriers, mobileLines }: Mobil
               <span>状態</span>
               <span>操作</span>
             </div>
-            <div className="divide-y divide-black/5 text-sm">
+            <div className="divide-y divide-border-theme text-sm">
               {visibleRecords.map((record) => {
                 const rowCosts = record.monthly_costs ?? [];
                 const rowTotalCost = calculateMobileLineTotalCost(record, rowCosts);
                 const rowProfit = calculateMobileLineProfit(record, rowCosts);
                 const rowClass = record.contract_status === "cancelled"
-                  ? "bg-slate-100/82"
+                  ? "bg-muted-bg"
                   : record.is_completed
-                    ? "bg-emerald-50/55"
-                    : "bg-white/72";
+                    ? "bg-profit-bg"
+                    : "bg-surface/75";
 
                 return (
                   <div
@@ -315,12 +402,13 @@ export function MobileLineManager({ isConfigured, carriers, mobileLines }: Mobil
                     <span className="font-medium">{formatCurrency(rowTotalCost)}</span>
                     <span className="font-medium">{formatCurrency(rowProfit)}</span>
                     <span className="flex flex-wrap gap-2">
+                      <StatusBadge tone={record.line_type === "campaign" ? "neutral" : "muted"}>{record.line_type === "campaign" ? "案件回線" : "通常回線"}</StatusBadge>
                       {record.is_completed ? <StatusBadge tone="success">特典完了</StatusBadge> : null}
                       {record.contract_status === "cancelled" ? <StatusBadge tone="muted">解約済</StatusBadge> : null}
                       {!record.is_completed && record.contract_status !== "cancelled" ? <StatusBadge tone="warning">進行中</StatusBadge> : null}
                     </span>
                     <span className="flex flex-wrap items-center gap-2">
-                      <label className="inline-flex items-center gap-2 rounded-full border border-black/5 bg-white/90 px-3 py-1.5 text-xs font-medium">
+                      <label className="inline-flex items-center gap-2 rounded-full border border-border-theme bg-surface px-3 py-1.5 text-xs font-medium">
                         <input
                           type="checkbox"
                           className="h-4 w-4 rounded"
@@ -338,7 +426,7 @@ export function MobileLineManager({ isConfigured, carriers, mobileLines }: Mobil
                         />
                         特典
                       </label>
-                      <label className="inline-flex items-center gap-2 rounded-full border border-black/5 bg-white/90 px-3 py-1.5 text-xs font-medium">
+                      <label className="inline-flex items-center gap-2 rounded-full border border-border-theme bg-surface px-3 py-1.5 text-xs font-medium">
                         <input
                           type="checkbox"
                           className="h-4 w-4 rounded"
@@ -384,17 +472,17 @@ export function MobileLineManager({ isConfigured, carriers, mobileLines }: Mobil
                   </div>
                 );
               })}
-              {visibleRecords.length === 0 ? <div className="bg-white/72 px-4 py-8 text-sm text-ink/60">該当データがありません。</div> : null}
+              {visibleRecords.length === 0 ? <div className="bg-surface/75 px-4 py-8 text-sm text-ink-sub">該当データがありません。</div> : null}
             </div>
           </div>
         </SectionCard>
 
         <SectionCard title="追加 / 編集" description="特典完了と解約済を分けて管理し、月額履歴から総コストと利益を計算します。">
           <div className="mb-4 grid gap-3 md:grid-cols-2">
-            <div className="rounded-[22px] border border-accent/10 bg-accentSoft p-3.5 text-sm text-accent">
+            <div className="rounded-[22px] border border-accent/20 bg-accent-bg p-3.5 text-sm text-accent">
               総コストプレビュー: <span className="font-semibold">{formatCurrency(totalCost)}</span>
             </div>
-            <div className="rounded-[22px] border border-black/5 bg-sand/65 p-3.5 text-sm text-ink/75">
+            <div className="rounded-[22px] border border-profit/20 bg-profit-bg p-3.5 text-sm text-profit">
               利益プレビュー: <span className="font-semibold">{formatCurrency(profit)}</span>
             </div>
           </div>
@@ -479,7 +567,7 @@ export function MobileLineManager({ isConfigured, carriers, mobileLines }: Mobil
               </Field>
             </div>
 
-            <label className="flex items-center gap-3 rounded-[20px] bg-canvas/70 px-4 py-3 text-sm">
+            <label className="flex items-center gap-3 rounded-[20px] border border-border-theme bg-surface-alt/70 px-4 py-3 text-sm">
               <input type="checkbox" className="h-4 w-4 rounded" {...form.register("is_completed")} />
               特典完了として扱う
             </label>
@@ -488,11 +576,11 @@ export function MobileLineManager({ isConfigured, carriers, mobileLines }: Mobil
               <Textarea {...form.register("memo")} />
             </Field>
 
-            <div className="rounded-[26px] border border-black/5 bg-canvas/45 p-4">
+            <div className="rounded-[26px] border border-border-theme bg-surface-alt/40 p-4">
               <div className="mb-4 flex items-center justify-between gap-3">
                 <div>
                   <h3 className="font-semibold">月額履歴</h3>
-                  <p className="text-sm text-ink/60">日割りはせず、登録済み monthly_fee の合計で扱います。</p>
+                  <p className="text-sm text-ink-sub">日割りはせず、登録済み monthly_fee の合計で扱います。</p>
                 </div>
                 <Button
                   type="button"
@@ -505,7 +593,7 @@ export function MobileLineManager({ isConfigured, carriers, mobileLines }: Mobil
 
               <div className="grid gap-3">
                 {fieldArray.fields.map((field, index) => (
-                  <div key={field.id} className="grid gap-3 rounded-[22px] border border-black/5 bg-white/82 p-4">
+                  <div key={field.id} className="grid gap-3 rounded-[22px] border border-border-theme bg-surface p-4">
                     <div className="grid gap-3 md:grid-cols-3">
                       <Field label="開始日" error={form.formState.errors.monthly_costs?.[index]?.start_date?.message}>
                         <Input type="date" {...form.register(`monthly_costs.${index}.start_date`)} />
@@ -527,11 +615,11 @@ export function MobileLineManager({ isConfigured, carriers, mobileLines }: Mobil
                     </div>
                   </div>
                 ))}
-                {fieldArray.fields.length === 0 ? <p className="text-sm text-ink/60">月額履歴はまだありません。</p> : null}
+                {fieldArray.fields.length === 0 ? <p className="text-sm text-ink-sub">月額履歴はまだありません。</p> : null}
               </div>
             </div>
 
-            {feedback ? <p className="text-sm text-ink/70">{feedback}</p> : null}
+            {feedback ? <p className="text-sm text-ink-sub">{feedback}</p> : null}
 
             <div className="flex flex-wrap gap-3">
               <Button type="submit" disabled={isPending}>{editingRecord ? "更新する" : "追加する"}</Button>

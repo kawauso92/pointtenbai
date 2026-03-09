@@ -1,13 +1,13 @@
-type StatusBadgeProps = {
+﻿type StatusBadgeProps = {
   tone?: "neutral" | "success" | "muted" | "warning";
   children: string;
 };
 
 const toneClassMap: Record<NonNullable<StatusBadgeProps["tone"]>, string> = {
-  neutral: "bg-sand/70 text-ink/75",
-  success: "bg-emerald-100 text-emerald-800",
-  muted: "bg-slate-200 text-slate-700",
-  warning: "bg-amber-100 text-amber-800",
+  neutral: "border border-accent/20 bg-accent-bg text-accent",
+  success: "border border-profit/20 bg-profit-bg text-profit",
+  muted: "border border-muted/20 bg-muted-bg text-muted",
+  warning: "border border-prospect/20 bg-prospect-bg text-prospect",
 };
 
 export function StatusBadge({ tone = "neutral", children }: StatusBadgeProps) {

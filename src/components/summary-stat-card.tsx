@@ -1,4 +1,4 @@
-import { formatCurrency } from "@/lib/utils";
+﻿import { formatCurrency } from "@/lib/utils";
 
 type SummaryStatCardProps = {
   label: string;
@@ -10,10 +10,10 @@ type SummaryStatCardProps = {
 };
 
 const toneClassMap: Record<NonNullable<SummaryStatCardProps["tone"]>, string> = {
-  default: "bg-white/88 text-ink",
-  success: "bg-emerald-50 text-emerald-900",
-  muted: "bg-slate-100 text-slate-800",
-  warning: "bg-amber-50 text-amber-900",
+  default: "border-border-theme bg-surface text-ink",
+  success: "border-profit/20 bg-profit-bg text-ink",
+  muted: "border-muted/20 bg-muted-bg text-ink",
+  warning: "border-prospect/20 bg-prospect-bg text-ink",
 };
 
 export function SummaryStatCard({
@@ -27,10 +27,10 @@ export function SummaryStatCard({
   const renderedValue = kind === "currency" && typeof value === "number" ? formatCurrency(value) : value;
 
   return (
-    <div className={`min-h-[104px] rounded-[24px] border border-black/5 px-4 py-3 shadow-sm ${toneClassMap[tone]} ${className}`}>
-      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] opacity-65">{label}</p>
+    <div className={`min-h-[104px] rounded-[24px] border px-4 py-3 shadow-sm ${toneClassMap[tone]} ${className}`}>
+      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-ink-sub">{label}</p>
       <p className="mt-3 text-[28px] font-semibold leading-none tracking-tight">{renderedValue}</p>
-      {note ? <p className="mt-2 text-[11px] opacity-70">{note}</p> : null}
+      {note ? <p className="mt-2 text-[11px] text-ink-sub">{note}</p> : null}
     </div>
   );
 }

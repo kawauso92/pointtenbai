@@ -1,4 +1,4 @@
-import type { ButtonHTMLAttributes, PropsWithChildren } from "react";
+﻿import type { ButtonHTMLAttributes, PropsWithChildren } from "react";
 
 type ButtonProps = PropsWithChildren<
   ButtonHTMLAttributes<HTMLButtonElement> & {
@@ -8,9 +8,9 @@ type ButtonProps = PropsWithChildren<
 >;
 
 const variantClassMap: Record<NonNullable<ButtonProps["variant"]>, string> = {
-  primary: "bg-accent text-white hover:bg-accent/90",
-  secondary: "bg-sand text-ink hover:bg-sand/80",
-  ghost: "bg-transparent text-ink/70 hover:bg-black/5",
+  primary: "bg-accent text-white hover:opacity-90",
+  secondary: "border border-border-theme bg-surface-alt text-ink hover:bg-surface",
+  ghost: "bg-transparent text-ink-sub hover:bg-nav-active hover:text-ink",
   danger: "bg-red-600 text-white hover:bg-red-700",
 };
 

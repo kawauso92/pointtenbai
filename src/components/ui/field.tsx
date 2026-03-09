@@ -1,4 +1,4 @@
-import type { PropsWithChildren, ReactNode } from "react";
+﻿import type { PropsWithChildren, ReactNode } from "react";
 
 type FieldProps = PropsWithChildren<{
   label: string;
@@ -21,14 +21,14 @@ export function Field({
   return (
     <label className="grid gap-2 text-sm" htmlFor={htmlFor}>
       <span className="flex items-center justify-between gap-3">
-        <span className="font-medium text-ink/80">
+        <span className="font-medium text-ink">
           {label}
-          {required ? <span className="ml-1 text-warn">*</span> : null}
+          {required ? <span className="ml-1 text-prospect">*</span> : null}
         </span>
         {endAdornment}
       </span>
       {children}
-      {description ? <span className="text-xs text-ink/55">{description}</span> : null}
+      {description ? <span className="text-xs text-ink-sub">{description}</span> : null}
       {error ? <span className="text-xs font-medium text-red-600">{error}</span> : null}
     </label>
   );

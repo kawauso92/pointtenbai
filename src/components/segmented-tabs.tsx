@@ -1,4 +1,4 @@
-export type SegmentedTabItem<T extends string> = {
+﻿export type SegmentedTabItem<T extends string> = {
   value: T;
   label: string;
   count?: number;
@@ -12,7 +12,7 @@ type SegmentedTabsProps<T extends string> = {
 
 export function SegmentedTabs<T extends string>({ items, value, onChange }: SegmentedTabsProps<T>) {
   return (
-    <div className="inline-flex flex-wrap gap-1.5 rounded-full border border-black/5 bg-white/85 p-1.5 shadow-sm">
+    <div className="inline-flex flex-wrap gap-1.5 rounded-full border border-border-theme bg-surface-alt/90 p-1.5 shadow-sm">
       {items.map((item) => {
         const isActive = item.value === value;
         const suffix = typeof item.count === "number" ? ` ${item.count}` : "";
@@ -22,12 +22,12 @@ export function SegmentedTabs<T extends string>({ items, value, onChange }: Segm
             key={item.value}
             type="button"
             className={`rounded-full px-3.5 py-2 text-sm font-medium transition ${
-              isActive ? "bg-accent text-white shadow-sm" : "text-ink/65 hover:bg-canvas"
+              isActive ? "bg-nav-active text-nav-active-text shadow-sm" : "text-ink-sub hover:bg-surface hover:text-ink"
             }`}
             onClick={() => onChange(item.value)}
           >
             {item.label}
-            <span className={`ml-1 text-xs ${isActive ? "text-white/85" : "text-ink/45"}`}>{suffix}</span>
+            <span className={`ml-1 text-xs ${isActive ? "text-nav-active-text/80" : "text-ink-sub/80"}`}>{suffix}</span>
           </button>
         );
       })}
