@@ -88,7 +88,7 @@ export function SettingsManager({
   });
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[1.05fr,0.95fr]">
+    <div className="grid gap-4 md:gap-6 xl:grid-cols-[1.05fr,0.95fr]">
       <SectionCard title="マスタ候補一覧" description="有効 / 無効は過去データを壊さずに切り替えます。">
         {!isConfigured ? <ConfigurationNotice /> : null}
 

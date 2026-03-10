@@ -29,6 +29,7 @@ type PointActivityManagerProps = {
   isConfigured: boolean;
   pointSites: PointSiteOption[];
   pointActivities: PointActivityRow[];
+  initialFilters?: Record<string, string | string[] | undefined>;
 };
 
 function createEmptyValues(): PointActivityFormValues {
@@ -64,13 +65,25 @@ function getYearOptions(records: PointActivityRow[], tab: "active" | "completed"
   return Array.from(new Set(records.map((record) => getPointActivityFilterDate(record, tab).slice(0, 4)))).sort((left, right) => right.localeCompare(left));
 }
 
-export function PointActivityManager({ isConfigured, pointSites, pointActivities }: PointActivityManagerProps) {
+function parseTabParam(value: string | null): "active" | "completed" {
+  return value === "completed" ? "completed" : "active";
+}
+
+function parseYearParam(value: string | null) {
+  return value && /^\d{4}$/.test(value) ? value : "all";
+}
+
+function parseMonthParam(value: string | null) {
+  return value && /^(0[1-9]|1[0-2])$/.test(value) ? value : "all";
+}
+
+export function PointActivityManager({ isConfigured, pointSites, pointActivities, initialFilters }: PointActivityManagerProps) {
   const router = useRouter();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
-  const [tab, setTab] = useState<"active" | "completed">("active");
-  const [yearFilter, setYearFilter] = useState("all");
-  const [monthFilter, setMonthFilter] = useState("all");
+  const [tab, setTab] = useState<"active" | "completed">(() => parseTabParam(typeof initialFilters?.tab === "string" ? initialFilters.tab : null));
+  const [yearFilter, setYearFilter] = useState(() => parseYearParam(typeof initialFilters?.year === "string" ? initialFilters.year : null));
+  const [monthFilter, setMonthFilter] = useState(() => parseMonthParam(typeof initialFilters?.month === "string" ? initialFilters.month : null));
   const [siteFilter, setSiteFilter] = useState("all");
   const [isPending, startTransition] = useTransition();
   const editingRecord = pointActivities.find((record) => record.id === editingId) ?? null;
@@ -99,6 +112,7 @@ export function PointActivityManager({ isConfigured, pointSites, pointActivities
   const tabCounts = getPointActivityTabCounts(filteredRecords);
   const visibleRecords = filterPointActivitiesByTab(filteredRecords, tab);
   const yearOptions = getYearOptions(pointActivities, tab);
+  const hasLinkedFilters = Boolean(initialFilters?.tab || initialFilters?.year || initialFilters?.month);
 
   useEffect(() => {
     form.reset(editingRecord ? toFormValues(editingRecord) : createEmptyValues());
@@ -119,14 +133,14 @@ export function PointActivityManager({ isConfigured, pointSites, pointActivities
   });
 
   return (
-    <div className="space-y-5">
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+    <div className="space-y-3 md:space-y-5">
+      <div className="grid grid-cols-2 gap-1.5 sm:gap-3 xl:grid-cols-4">
         {summaryItems.map((item) => (
-          <SummaryStatCard key={item.label} {...item} className="min-h-[96px]" />
+          <SummaryStatCard key={item.label} {...item} className="min-h-[88px] md:min-h-[96px]" />
         ))}
       </div>
 
-      <div className="grid gap-5 xl:grid-cols-[1.08fr,0.92fr]">
+      <div className="grid gap-3 md:gap-5 xl:grid-cols-[1.08fr,0.92fr]">
         <SectionCard
           title="案件一覧"
           description="進行中と完了済を切り替えながら、見込みと実利益の元データを管理します。"
@@ -143,7 +157,7 @@ export function PointActivityManager({ isConfigured, pointSites, pointActivities
         >
           {!isConfigured ? <ConfigurationNotice /> : null}
 
-          <div className="mt-4 grid gap-3 md:grid-cols-3">
+          <div className="mt-3 grid gap-2.5 md:mt-4 md:grid-cols-3 md:gap-3">
             <Field label="年">
               <Select value={yearFilter} onChange={(event) => setYearFilter(event.target.value)}>
                 <option value="all">すべて</option>
@@ -167,11 +181,12 @@ export function PointActivityManager({ isConfigured, pointSites, pointActivities
             </Field>
           </div>
 
-          <div className="mt-3 flex flex-wrap gap-2 text-xs text-ink-sub">
-            <span className="rounded-full border border-border-theme bg-surface-alt/70 px-3 py-1.5">表示件数 {visibleRecords.length}</span>
+          <div className="mt-2.5 flex flex-wrap gap-1.5 text-[11px] text-ink-sub md:mt-3 md:gap-2 md:text-xs">
+            <span className="rounded-full border border-border-theme bg-surface-alt/70 px-2.5 py-1 md:px-3 md:py-1.5">表示件数 {visibleRecords.length}</span>
+            {hasLinkedFilters ? <span className="rounded-full border border-border-theme bg-accent-bg px-2.5 py-1 text-accent md:px-3 md:py-1.5">ダッシュボード絞り込み</span> : null}
             <button
               type="button"
-              className="rounded-full border border-border-theme bg-surface px-3 py-1.5 transition hover:bg-surface-alt"
+              className="rounded-full border border-border-theme bg-surface px-2.5 py-1 transition hover:bg-surface-alt md:px-3 md:py-1.5"
               onClick={() => {
                 setYearFilter("all");
                 setMonthFilter("all");
@@ -182,28 +197,28 @@ export function PointActivityManager({ isConfigured, pointSites, pointActivities
             </button>
           </div>
 
-          <div className="mt-4 space-y-3 md:hidden">
+          <div className="mt-3 space-y-2.5 md:mt-4 md:hidden">
             {visibleRecords.map((record) => (
               <div
                 key={record.id}
                 className={[
-                  "rounded-[26px] border p-4",
+                  "rounded-[22px] border p-3.5",
                   record.is_completed ? "border-profit/20 bg-profit-bg" : "border-border-theme bg-surface-alt/70",
                 ].join(" ")}
               >
-                <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start justify-between gap-2.5">
                   <div>
                     <p className="text-sm text-ink-sub">{formatDate(record.activity_date)}</p>
-                    <h3 className="mt-1 text-[15px] font-semibold">{record.title}</h3>
+                    <h3 className="mt-0.5 text-[14px] font-semibold leading-tight">{record.title}</h3>
                     <p className="mt-1 text-sm text-ink-sub">{record.point_site?.name ?? "-"}</p>
                   </div>
                   <StatusBadge tone={record.is_completed ? "success" : "warning"}>
                     {record.is_completed ? "完了" : "見込み"}
                   </StatusBadge>
                 </div>
-                <p className="mt-4 text-xl font-semibold tracking-tight">{formatCurrency(record.reward_amount)}</p>
-                <div className="mt-4 flex flex-wrap items-center gap-2">
-                  <label className="inline-flex items-center gap-2 rounded-full border border-border-theme bg-surface px-3 py-2 text-xs font-medium">
+                <p className="mt-3 text-[1.1rem] font-semibold tracking-tight">{formatCurrency(record.reward_amount)}</p>
+                <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                  <label className="inline-flex items-center gap-1.5 rounded-full border border-border-theme bg-surface px-2.5 py-1.5 text-[11px] font-medium md:px-3 md:py-2 md:text-xs">
                     <input
                       type="checkbox"
                       className="h-4 w-4 rounded"

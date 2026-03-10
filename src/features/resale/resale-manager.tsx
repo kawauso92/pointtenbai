@@ -31,6 +31,7 @@ type ResaleManagerProps = {
   purchaseSources: PurchaseSourceOption[];
   salesChannels: SalesChannelOption[];
   resaleTransactions: ResaleTransactionRow[];
+  initialFilters?: Record<string, string | string[] | undefined>;
 };
 
 function createEmptyValues(): ResaleTransactionFormValues {
@@ -78,13 +79,25 @@ function getYearOptions(records: ResaleTransactionRow[], tab: "active" | "comple
   return Array.from(new Set(records.map((record) => getResaleTransactionFilterDate(record, tab).slice(0, 4)))).sort((left, right) => right.localeCompare(left));
 }
 
-export function ResaleManager({ isConfigured, purchaseSources, salesChannels, resaleTransactions }: ResaleManagerProps) {
+function parseTabParam(value: string | null): "active" | "completed" {
+  return value === "completed" ? "completed" : "active";
+}
+
+function parseYearParam(value: string | null) {
+  return value && /^\d{4}$/.test(value) ? value : "all";
+}
+
+function parseMonthParam(value: string | null) {
+  return value && /^(0[1-9]|1[0-2])$/.test(value) ? value : "all";
+}
+
+export function ResaleManager({ isConfigured, purchaseSources, salesChannels, resaleTransactions, initialFilters }: ResaleManagerProps) {
   const router = useRouter();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
-  const [tab, setTab] = useState<"active" | "completed">("active");
-  const [yearFilter, setYearFilter] = useState("all");
-  const [monthFilter, setMonthFilter] = useState("all");
+  const [tab, setTab] = useState<"active" | "completed">(() => parseTabParam(typeof initialFilters?.tab === "string" ? initialFilters.tab : null));
+  const [yearFilter, setYearFilter] = useState(() => parseYearParam(typeof initialFilters?.year === "string" ? initialFilters.year : null));
+  const [monthFilter, setMonthFilter] = useState(() => parseMonthParam(typeof initialFilters?.month === "string" ? initialFilters.month : null));
   const [purchaseSourceFilter, setPurchaseSourceFilter] = useState("all");
   const [salesChannelFilter, setSalesChannelFilter] = useState("all");
   const [isPending, startTransition] = useTransition();
@@ -127,6 +140,7 @@ export function ResaleManager({ isConfigured, purchaseSources, salesChannels, re
   const tabCounts = getResaleTabCounts(filteredRecords);
   const visibleRecords = filterResaleTransactionsByTab(filteredRecords, tab);
   const yearOptions = getYearOptions(resaleTransactions, tab);
+  const hasLinkedFilters = Boolean(initialFilters?.tab || initialFilters?.year || initialFilters?.month);
 
   useEffect(() => {
     form.reset(editingRecord ? toFormValues(editingRecord) : createEmptyValues());
@@ -147,14 +161,14 @@ export function ResaleManager({ isConfigured, purchaseSources, salesChannels, re
   });
 
   return (
-    <div className="space-y-5">
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+    <div className="space-y-3 md:space-y-5">
+      <div className="grid grid-cols-2 gap-1.5 sm:gap-3 xl:grid-cols-3">
         {summaryItems.map((item) => (
-          <SummaryStatCard key={item.label} {...item} className="min-h-[96px]" />
+          <SummaryStatCard key={item.label} {...item} className="min-h-[88px] md:min-h-[96px]" />
         ))}
       </div>
 
-      <div className="grid gap-5 xl:grid-cols-[1.14fr,0.86fr]">
+      <div className="grid gap-3 md:gap-5 xl:grid-cols-[1.14fr,0.86fr]">
         <SectionCard
           title="取引一覧"
           description="進行中と完了済を切り替えながら、仕入先・販売先ごとの利益を確認できます。"
@@ -171,7 +185,7 @@ export function ResaleManager({ isConfigured, purchaseSources, salesChannels, re
         >
           {!isConfigured ? <ConfigurationNotice /> : null}
 
-          <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+          <div className="mt-3 grid gap-2.5 md:mt-4 md:grid-cols-2 md:gap-3 xl:grid-cols-4">
             <Field label="年">
               <Select value={yearFilter} onChange={(event) => setYearFilter(event.target.value)}>
                 <option value="all">すべて</option>
@@ -201,11 +215,12 @@ export function ResaleManager({ isConfigured, purchaseSources, salesChannels, re
             </Field>
           </div>
 
-          <div className="mt-3 flex flex-wrap gap-2 text-xs text-ink-sub">
-            <span className="rounded-full border border-border-theme bg-surface-alt/70 px-3 py-1.5">表示件数 {visibleRecords.length}</span>
+          <div className="mt-2.5 flex flex-wrap gap-1.5 text-[11px] text-ink-sub md:mt-3 md:gap-2 md:text-xs">
+            <span className="rounded-full border border-border-theme bg-surface-alt/70 px-2.5 py-1 md:px-3 md:py-1.5">表示件数 {visibleRecords.length}</span>
+            {hasLinkedFilters ? <span className="rounded-full border border-border-theme bg-accent-bg px-2.5 py-1 text-accent md:px-3 md:py-1.5">ダッシュボード絞り込み</span> : null}
             <button
               type="button"
-              className="rounded-full border border-border-theme bg-surface px-3 py-1.5 transition hover:bg-surface-alt"
+              className="rounded-full border border-border-theme bg-surface px-2.5 py-1 transition hover:bg-surface-alt md:px-3 md:py-1.5"
               onClick={() => {
                 setYearFilter("all");
                 setMonthFilter("all");
@@ -217,12 +232,12 @@ export function ResaleManager({ isConfigured, purchaseSources, salesChannels, re
             </button>
           </div>
 
-          <div className="mt-4 space-y-3 md:hidden">
+          <div className="mt-3 space-y-2.5 md:mt-4 md:hidden">
             {visibleRecords.map((record) => (
               <div
                 key={record.id}
                 className={[
-                  "rounded-[26px] border p-4",
+                  "rounded-[22px] border p-3.5",
                   record.is_completed ? "border-profit/20 bg-profit-bg" : "border-border-theme bg-surface-alt/70",
                 ].join(" ")}
               >
@@ -238,7 +253,7 @@ export function ResaleManager({ isConfigured, purchaseSources, salesChannels, re
                     {record.is_completed ? "完了" : "見込み"}
                   </StatusBadge>
                 </div>
-                <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+                <div className="mt-3 grid grid-cols-2 gap-2.5 text-[12px] md:mt-4 md:gap-3 md:text-sm">
                   <div>
                     <p className="text-ink-sub">仕入額</p>
                     <p className="mt-1 font-semibold">{formatCurrency(record.purchase_amount)}</p>
@@ -248,8 +263,8 @@ export function ResaleManager({ isConfigured, purchaseSources, salesChannels, re
                     <p className="mt-1 font-semibold">{formatCurrency(calculateResaleProfit(record))}</p>
                   </div>
                 </div>
-                <div className="mt-4 flex flex-wrap items-center gap-2">
-                  <label className="inline-flex items-center gap-2 rounded-full border border-border-theme bg-surface px-3 py-2 text-xs font-medium">
+                <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                  <label className="inline-flex items-center gap-1.5 rounded-full border border-border-theme bg-surface px-2.5 py-1.5 text-[11px] font-medium md:px-3 md:py-2 md:text-xs">
                     <input
                       type="checkbox"
                       className="h-4 w-4 rounded"
@@ -378,11 +393,11 @@ export function ResaleManager({ isConfigured, purchaseSources, salesChannels, re
         </SectionCard>
 
         <SectionCard title="追加 / 編集" description="売却額と各種費用から利益を確認しながら登録できます。">
-          <div className="mb-4 rounded-[22px] border border-accent/20 bg-accent-bg p-3.5 text-sm text-accent">
+          <div className="mb-3 rounded-[18px] border border-accent/20 bg-accent-bg p-3 text-[12px] text-accent md:mb-4 md:rounded-[22px] md:p-3.5 md:text-sm">
             現在の利益プレビュー: <span className="font-semibold">{formatCurrency(previewProfit)}</span>
           </div>
 
-          <form className="grid gap-4" onSubmit={onSubmit}>
+          <form className="grid gap-3 md:gap-4" onSubmit={onSubmit}>
             <div className="grid gap-4 md:grid-cols-2">
               <Field label="仕入日" required error={form.formState.errors.purchase_date?.message}>
                 <Input type="date" {...form.register("purchase_date")} />

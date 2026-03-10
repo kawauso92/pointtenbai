@@ -1,7 +1,8 @@
 ﻿"use client";
 
-import { endOfMonth, format, parse } from "date-fns";
-import { useState } from "react";
+import Link from "next/link";
+import { addMonths, endOfMonth, format, parse, subMonths } from "date-fns";
+import { useState, type ReactNode } from "react";
 import { SectionCard } from "@/components/section-card";
 import { SummaryStatCard } from "@/components/summary-stat-card";
 import { Button } from "@/components/ui/button";
@@ -26,6 +27,8 @@ type CategoryCardProps = {
   label: string;
   actual: number;
   estimated: number;
+  actualHref: string;
+  estimatedHref: string;
 };
 
 const periodItems: Array<{ value: DashboardPeriodPreset; label: string }> = [
@@ -36,27 +39,80 @@ const periodItems: Array<{ value: DashboardPeriodPreset; label: string }> = [
   { value: "custom", label: "任意期間" },
 ];
 
-function CategoryCard({ label, actual, estimated }: CategoryCardProps) {
+function buildHref(pathname: string, params: Record<string, string | undefined>) {
+  const searchParams = new URLSearchParams();
+
+  for (const [key, value] of Object.entries(params)) {
+    if (value) {
+      searchParams.set(key, value);
+    }
+  }
+
+  const query = searchParams.toString();
+  return query ? `${pathname}?${query}` : pathname;
+}
+
+function getSharedPeriodFilters(from: string, to: string) {
+  const fromYear = from.slice(0, 4);
+  const toYear = to.slice(0, 4);
+
+  if (from.slice(0, 7) === to.slice(0, 7)) {
+    return {
+      year: fromYear,
+      month: from.slice(5, 7),
+    };
+  }
+
+  if (fromYear === toYear) {
+    return { year: fromYear };
+  }
+
+  return {};
+}
+
+function getMonthFilters(monthKey: string) {
+  return {
+    year: monthKey.slice(0, 4),
+    month: monthKey.slice(5, 7),
+  };
+}
+
+function DetailLinkPill({ href, children }: { href: string; children: ReactNode }) {
+  return (
+    <Link
+      href={href}
+      className="inline-flex min-h-8 items-center justify-center rounded-full border border-border-theme bg-surface px-3 py-1.5 text-[11px] font-medium text-ink-sub transition hover:bg-surface-alt hover:text-ink md:min-h-9 md:py-2 md:text-xs"
+    >
+      {children}
+    </Link>
+  );
+}
+
+function CategoryCard({ label, actual, estimated, actualHref, estimatedHref }: CategoryCardProps) {
   const total = actual + estimated;
 
   return (
-    <div className="rounded-[24px] border border-border-theme bg-surface p-4 shadow-sm">
-      <div className="flex items-center justify-between gap-3">
+    <div className="rounded-[20px] border border-border-theme bg-surface p-3 shadow-sm md:rounded-[24px] md:p-4">
+      <div className="flex items-center justify-between gap-2.5">
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-accent">{label}</p>
           <p className="mt-2 text-xs text-ink-sub">実利益</p>
         </div>
-        <p className="rounded-full bg-surface-alt px-3 py-1 text-[11px] font-medium text-ink-sub">合計 {formatCurrency(total)}</p>
+        <p className="rounded-full bg-surface-alt px-2.5 py-1 text-[10px] font-medium text-ink-sub md:px-3 md:text-[11px]">合計 {formatCurrency(total)}</p>
       </div>
       <div className="mt-3 grid gap-2 grid-cols-2">
         <div className="rounded-[18px] border border-profit/20 bg-profit-bg px-3 py-3">
-          <p className="text-[11px] text-ink-sub">利益</p>
-          <p className="mt-1 text-lg font-semibold tracking-tight text-profit">{formatCurrency(actual)}</p>
+          <p className="text-[11px] text-ink-sub">確定</p>
+          <p className="mt-1 text-base font-semibold tracking-tight text-profit md:text-lg">{formatCurrency(actual)}</p>
         </div>
         <div className="rounded-[18px] border border-prospect/20 bg-prospect-bg px-3 py-3">
           <p className="text-[11px] text-ink-sub">見込み</p>
-          <p className="mt-1 text-lg font-semibold tracking-tight text-prospect">{formatCurrency(estimated)}</p>
+          <p className="mt-1 text-base font-semibold tracking-tight text-prospect md:text-lg">{formatCurrency(estimated)}</p>
         </div>
+      </div>
+      <div className="mt-2.5 flex flex-wrap gap-1.5 md:mt-3 md:gap-2">
+        <DetailLinkPill href={actualHref}>{label} 実績</DetailLinkPill>
+        <DetailLinkPill href={estimatedHref}>{label} 見込み</DetailLinkPill>
       </div>
     </div>
   );
@@ -88,7 +144,6 @@ export function DashboardOverview({ pointActivities, resaleTransactions, mobileL
       selectedMonthKey,
     ]),
   ).sort((left, right) => left.localeCompare(right));
-  const currentMonthIndex = monthKeys.indexOf(selectedMonthKey);
   const selectedMonthDate = parse(`${selectedMonthKey}-01`, "yyyy-MM-dd", new Date());
   const selectedMonthLabel = format(selectedMonthDate, "yyyy年M月");
   const monthMetrics = computeDashboardMetrics(
@@ -103,12 +158,29 @@ export function DashboardOverview({ pointActivities, resaleTransactions, mobileL
     },
   );
   const monthRow = monthMetrics.monthlyRows[0];
+  const sharedPeriodFilters = getSharedPeriodFilters(range.from, range.to);
+  const selectedMonthFilters = getMonthFilters(selectedMonthKey);
+  const pointLinks = {
+    actualHref: buildHref("/point-activities", { ...sharedPeriodFilters, tab: "completed" }),
+    estimatedHref: buildHref("/point-activities", { ...sharedPeriodFilters, tab: "active" }),
+    monthHref: buildHref("/point-activities", { ...selectedMonthFilters, tab: "active" }),
+  };
+  const resaleLinks = {
+    actualHref: buildHref("/resale", { ...sharedPeriodFilters, tab: "completed" }),
+    estimatedHref: buildHref("/resale", { ...sharedPeriodFilters, tab: "active" }),
+    monthHref: buildHref("/resale", { ...selectedMonthFilters, tab: "active" }),
+  };
+  const mobileLinks = {
+    actualHref: buildHref("/mobile-lines", { ...sharedPeriodFilters, lineType: "campaign", tab: "completed" }),
+    estimatedHref: buildHref("/mobile-lines", { ...sharedPeriodFilters, lineType: "campaign", tab: "active" }),
+    monthHref: buildHref("/mobile-lines", { ...selectedMonthFilters, lineType: "campaign", tab: "active" }),
+  };
 
   return (
-    <div className="space-y-4 md:space-y-5">
+    <div className="space-y-3 md:space-y-5">
       <SectionCard title="期間フィルタ" description="ダッシュボード全体の集計期間を切り替えます。">
-        <div className="space-y-3">
-          <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
+        <div className="space-y-2 md:space-y-3">
+          <div className="grid grid-cols-3 gap-1 md:grid-cols-5 xl:gap-1.5">
             {periodItems.map((item) => {
               const isActive = item.value === preset;
 
@@ -116,7 +188,7 @@ export function DashboardOverview({ pointActivities, resaleTransactions, mobileL
                 <button
                   key={item.value}
                   type="button"
-                  className={`rounded-2xl px-4 py-3 text-sm font-medium transition ${
+                  className={`min-h-10 rounded-[16px] px-2 py-1.5 text-[12px] font-medium leading-tight transition md:min-h-0 md:rounded-2xl md:px-4 md:py-3 md:text-sm ${
                     isActive ? "bg-nav-active text-nav-active-text" : "bg-surface-alt text-ink-sub hover:bg-surface hover:text-ink"
                   }`}
                   onClick={() => setPreset(item.value)}
@@ -128,7 +200,7 @@ export function DashboardOverview({ pointActivities, resaleTransactions, mobileL
           </div>
 
           {preset === "custom" ? (
-            <div className="grid gap-3 md:grid-cols-[1fr,1fr,auto] md:items-end">
+            <div className="grid gap-2 md:grid-cols-[1fr,1fr,auto] md:items-end">
               <label className="grid gap-2 text-sm">
                 <span className="font-medium text-ink">開始日</span>
                 <Input type="date" value={customFrom} onChange={(event) => setCustomFrom(event.target.value)} />
@@ -137,27 +209,27 @@ export function DashboardOverview({ pointActivities, resaleTransactions, mobileL
                 <span className="font-medium text-ink">終了日</span>
                 <Input type="date" value={customTo} onChange={(event) => setCustomTo(event.target.value)} />
               </label>
-              <div className="rounded-2xl border border-border-theme bg-surface-alt/70 px-4 py-3 text-sm text-ink-sub">
+              <div className="rounded-[18px] border border-border-theme bg-surface-alt/70 px-2.5 py-2 text-[12px] leading-tight text-ink-sub md:rounded-2xl md:px-4 md:py-3 md:text-sm">
                 {customRangeInvalid ? "開始日と終了日を正しく指定してください。" : "指定期間で集計します。"}
               </div>
             </div>
           ) : null}
 
-          <div className="flex flex-wrap items-center gap-3 text-sm text-ink-sub">
-            <span className="rounded-full border border-border-theme bg-surface-alt/70 px-3 py-1.5">対象期間 {range.label}</span>
+          <div className="flex flex-wrap items-center gap-1.5 text-[12px] leading-tight text-ink-sub md:gap-3 md:text-sm">
+            <span className="rounded-full border border-border-theme bg-surface-alt/70 px-2.5 py-1">対象期間 {range.label}</span>
             <span>{range.from} から {range.to}</span>
           </div>
         </div>
       </SectionCard>
 
-      <div className="grid gap-3 md:grid-cols-2">
+      <div className="grid grid-cols-2 gap-2 md:gap-3">
         <SummaryStatCard
           label="利益"
           value={metrics.periodActualTotal}
           kind="currency"
           tone="success"
           note={range.label}
-          className="min-h-[108px]"
+          className="min-h-[88px] md:min-h-[108px]"
         />
         <SummaryStatCard
           label="見込み利益"
@@ -165,28 +237,45 @@ export function DashboardOverview({ pointActivities, resaleTransactions, mobileL
           kind="currency"
           tone="warning"
           note={range.label}
-          className="min-h-[108px]"
+          className="min-h-[88px] md:min-h-[108px]"
         />
       </div>
 
       <SectionCard title="カテゴリ別内訳" description="選択中の期間で、どのカテゴリが利益を作っているかを見やすく整理しています。">
-        <div className="grid gap-3 md:grid-cols-3">
-          <CategoryCard label="ポイ活" actual={metrics.categories.point.actual} estimated={metrics.categories.point.estimated} />
-          <CategoryCard label="転売" actual={metrics.categories.resale.actual} estimated={metrics.categories.resale.estimated} />
-          <CategoryCard label="回線" actual={metrics.categories.mobile.actual} estimated={metrics.categories.mobile.estimated} />
+        <div className="grid gap-2 md:gap-3 md:grid-cols-3">
+          <CategoryCard
+            label="ポイ活"
+            actual={metrics.categories.point.actual}
+            estimated={metrics.categories.point.estimated}
+            actualHref={pointLinks.actualHref}
+            estimatedHref={pointLinks.estimatedHref}
+          />
+          <CategoryCard
+            label="転売"
+            actual={metrics.categories.resale.actual}
+            estimated={metrics.categories.resale.estimated}
+            actualHref={resaleLinks.actualHref}
+            estimatedHref={resaleLinks.estimatedHref}
+          />
+          <CategoryCard
+            label="回線"
+            actual={metrics.categories.mobile.actual}
+            estimated={metrics.categories.mobile.estimated}
+            actualHref={mobileLinks.actualHref}
+            estimatedHref={mobileLinks.estimatedHref}
+          />
         </div>
       </SectionCard>
 
       <SectionCard title="対象月サマリー" description="当月を初期表示にし、前後移動または年月選択で単月の状況を追えます。">
-        <div className="space-y-4">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="space-y-3 md:space-y-4">
+          <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-2">
               <Button
                 type="button"
                 variant="secondary"
-                className="px-3 py-2"
-                disabled={currentMonthIndex <= 0}
-                onClick={() => setSelectedMonthKey(monthKeys[currentMonthIndex - 1])}
+                className="px-3 py-1.5 text-sm md:py-2"
+                onClick={() => setSelectedMonthKey(format(subMonths(selectedMonthDate, 1), "yyyy-MM"))}
               >
                 前月
               </Button>
@@ -194,14 +283,13 @@ export function DashboardOverview({ pointActivities, resaleTransactions, mobileL
                 type="button"
                 variant="secondary"
                 className="px-3 py-2"
-                disabled={currentMonthIndex === -1 || currentMonthIndex >= monthKeys.length - 1}
-                onClick={() => setSelectedMonthKey(monthKeys[currentMonthIndex + 1])}
+                onClick={() => setSelectedMonthKey(format(addMonths(selectedMonthDate, 1), "yyyy-MM"))}
               >
                 次月
               </Button>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-[180px,180px]">
+            <div className="grid gap-2.5 sm:grid-cols-[180px,180px]">
               <label className="grid gap-2 text-sm">
                 <span className="font-medium text-ink">年月</span>
                 <Input type="month" value={selectedMonthKey} onChange={(event) => setSelectedMonthKey(event.target.value)} />
@@ -217,44 +305,52 @@ export function DashboardOverview({ pointActivities, resaleTransactions, mobileL
             </div>
           </div>
 
-          <div className="rounded-[24px] border border-border-theme bg-surface-alt/50 p-4 md:p-5">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="rounded-[22px] border border-border-theme bg-surface-alt/50 p-3.5 md:rounded-[24px] md:p-5">
+            <div className="flex flex-col gap-2.5 sm:flex-row sm:items-start sm:justify-between">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-accent">Month Focus</p>
-                <h3 className="mt-2 text-xl font-semibold tracking-tight md:text-2xl">{selectedMonthLabel}</h3>
-                <p className="mt-1 text-sm text-ink-sub">完了 {monthRow.actualCount} 件 / 見込み {monthRow.estimatedCount} 件</p>
+                <h3 className="mt-1.5 text-lg font-semibold tracking-tight md:mt-2 md:text-2xl">{selectedMonthLabel}</h3>
+                <p className="mt-1 text-[13px] text-ink-sub md:text-sm">完了 {monthRow.actualCount} 件 / 見込み {monthRow.estimatedCount} 件</p>
               </div>
-              <p className="rounded-full bg-surface px-3 py-1.5 text-[11px] font-medium text-ink-sub">
+              <p className="rounded-full bg-surface px-2.5 py-1 text-[10px] font-medium text-ink-sub md:px-3 md:py-1.5 md:text-[11px]">
                 合計 {formatCurrency(monthRow.actual + monthRow.estimated)}
               </p>
             </div>
 
-            <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-3 md:gap-3">
-              <div className="rounded-[18px] border border-border-theme bg-surface px-3 py-3 text-center">
+            <div className="mt-3 flex flex-wrap gap-2">
+          <DetailLinkPill href={pointLinks.monthHref}>この月のポイ活</DetailLinkPill>
+          <DetailLinkPill href={resaleLinks.monthHref}>この月の転売</DetailLinkPill>
+          <DetailLinkPill href={mobileLinks.monthHref}>この月の回線</DetailLinkPill>
+        </div>
+
+
+
+            <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3 md:mt-4 md:gap-3">
+              <div className="rounded-[18px] border border-border-theme bg-surface px-3 py-2.5 text-center md:py-3">
                 <p className="text-[11px] text-ink-sub">件数</p>
                 <p className="mt-1 text-lg font-semibold tracking-tight">{monthRow.recordCount}</p>
               </div>
-              <div className="rounded-[18px] border border-profit/20 bg-profit-bg px-3 py-3 text-center">
-                <p className="text-[11px] text-ink-sub">利益</p>
+              <div className="rounded-[18px] border border-profit/20 bg-profit-bg px-3 py-2.5 text-center md:py-3">
+                <p className="text-[11px] text-ink-sub">確定利益</p>
                 <p className="mt-1 text-lg font-semibold tracking-tight text-profit">{formatCurrency(monthRow.actual)}</p>
               </div>
-              <div className="rounded-[18px] border border-prospect/20 bg-prospect-bg px-3 py-3 text-center">
+              <div className="rounded-[18px] border border-prospect/20 bg-prospect-bg px-3 py-2.5 text-center md:py-3">
                 <p className="text-[11px] text-ink-sub">見込み利益</p>
                 <p className="mt-1 text-lg font-semibold tracking-tight text-prospect">{formatCurrency(monthRow.estimated)}</p>
               </div>
             </div>
 
-            <div className="mt-4 grid gap-2 md:grid-cols-3">
-              <div className="rounded-[18px] border border-border-theme bg-surface px-3 py-3">
+            <div className="mt-3 grid gap-2 md:mt-4 md:grid-cols-3">
+              <div className="rounded-[18px] border border-border-theme bg-surface px-3 py-2.5 md:py-3">
                 <div className="flex items-center justify-between gap-3">
-                  <span className="text-sm font-medium">ポイ活</span>
+                  <span className="text-[13px] font-medium md:text-sm">ポイ活</span>
                   <span className="text-xs text-ink-sub">月次内訳</span>
                 </div>
-                <div className="mt-2 flex items-center justify-between text-sm">
-                  <span className="text-ink-sub">利益</span>
+                <div className="mt-1.5 flex items-center justify-between text-[13px] md:mt-2 md:text-sm">
+                  <span className="text-ink-sub">確定</span>
                   <span className="font-medium text-profit">{formatCurrency(monthRow.pointActual)}</span>
                 </div>
-                <div className="mt-1 flex items-center justify-between text-sm">
+                <div className="mt-1 flex items-center justify-between text-[13px] md:text-sm">
                   <span className="text-ink-sub">見込み</span>
                   <span className="font-medium text-prospect">{formatCurrency(monthRow.pointEstimated)}</span>
                 </div>
@@ -266,7 +362,7 @@ export function DashboardOverview({ pointActivities, resaleTransactions, mobileL
                   <span className="text-xs text-ink-sub">月次内訳</span>
                 </div>
                 <div className="mt-2 flex items-center justify-between text-sm">
-                  <span className="text-ink-sub">利益</span>
+                  <span className="text-ink-sub">確定</span>
                   <span className="font-medium text-profit">{formatCurrency(monthRow.resaleActual)}</span>
                 </div>
                 <div className="mt-1 flex items-center justify-between text-sm">
@@ -281,7 +377,7 @@ export function DashboardOverview({ pointActivities, resaleTransactions, mobileL
                   <span className="text-xs text-ink-sub">月次内訳</span>
                 </div>
                 <div className="mt-2 flex items-center justify-between text-sm">
-                  <span className="text-ink-sub">利益</span>
+                  <span className="text-ink-sub">確定</span>
                   <span className="font-medium text-profit">{formatCurrency(monthRow.mobileActual)}</span>
                 </div>
                 <div className="mt-1 flex items-center justify-between text-sm">

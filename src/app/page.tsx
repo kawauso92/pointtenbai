@@ -7,7 +7,7 @@ export default async function DashboardPage() {
   const data = await getDashboardPageData();
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4 md:space-y-5">
       <PageHeader
         eyebrow="Dashboard"
         title="利益ダッシュボード"

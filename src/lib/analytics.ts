@@ -262,15 +262,15 @@ export function computePointActivitySummary(records: PointActivityRow[]): Summar
     { label: "進行中件数", value: activeRecords.length },
     { label: "完了済件数", value: completedRecords.length, tone: "success" },
     {
-      label: "見込み報酬合計",
-      value: activeRecords.reduce((total, record) => total + Number(record.reward_amount), 0),
-      tone: "warning",
-      kind: "currency",
-    },
-    {
       label: "確定報酬合計",
       value: completedRecords.reduce((total, record) => total + Number(record.reward_amount), 0),
       tone: "success",
+      kind: "currency",
+    },
+    {
+      label: "見込み報酬合計",
+      value: activeRecords.reduce((total, record) => total + Number(record.reward_amount), 0),
+      tone: "warning",
       kind: "currency",
     },
   ];
@@ -284,18 +284,7 @@ export function computeResaleSummary(records: ResaleTransactionRow[]): SummaryIt
     { label: "進行中件数", value: activeRecords.length },
     { label: "完了済件数", value: completedRecords.length, tone: "success" },
     {
-      label: "売却額合計",
-      value: completedRecords.reduce((total, record) => total + Number(record.sale_amount ?? 0), 0),
-      kind: "currency",
-      tone: "success",
-    },
-    {
-      label: "仕入額合計",
-      value: records.reduce((total, record) => total + Number(record.purchase_amount), 0),
-      kind: "currency",
-    },
-    {
-      label: "利益合計",
+      label: "確定利益合計",
       value: completedRecords.reduce((total, record) => total + calculateResaleProfit(record), 0),
       kind: "currency",
       tone: "success",
@@ -305,6 +294,17 @@ export function computeResaleSummary(records: ResaleTransactionRow[]): SummaryIt
       value: activeRecords.reduce((total, record) => total + calculateResaleProfit(record), 0),
       kind: "currency",
       tone: "warning",
+    },
+    {
+      label: "売却額合計",
+      value: completedRecords.reduce((total, record) => total + Number(record.sale_amount ?? 0), 0),
+      kind: "currency",
+      tone: "success",
+    },
+    {
+      label: "仕入額合計",
+      value: records.reduce((total, record) => total + Number(record.purchase_amount), 0),
+      kind: "currency",
     },
   ];
 }
@@ -320,8 +320,6 @@ export function computeMobileLineSummary(records: MobileLineRow[]): SummaryItem[
   return [
     { label: "進行中件数", value: activeLines.length },
     { label: "完了済件数", value: completedLines.length, tone: "success" },
-    { label: "解約済件数", value: cancelledLines.length, tone: "muted" },
-    { label: "案件回線数", value: campaignLines.length },
     {
       label: "確定報酬合計",
       value: rewardCompletedLines.reduce((total, record) => total + Number(record.reward_amount ?? 0), 0),
@@ -334,6 +332,8 @@ export function computeMobileLineSummary(records: MobileLineRow[]): SummaryItem[
       kind: "currency",
       tone: "warning",
     },
+    { label: "案件回線数", value: campaignLines.length },
+    { label: "解約済件数", value: cancelledLines.length, tone: "muted" },
   ];
 }
 

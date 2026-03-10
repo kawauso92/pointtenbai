@@ -6,7 +6,7 @@ export default async function SettingsPage() {
   const data = await getSettingsPageData();
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       <PageHeader
         eyebrow="Settings"
         title="設定"

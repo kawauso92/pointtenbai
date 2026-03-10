@@ -36,6 +36,7 @@ type MobileLineManagerProps = {
   isConfigured: boolean;
   carriers: CarrierOption[];
   mobileLines: MobileLineRow[];
+  initialFilters?: Record<string, string | string[] | undefined>;
 };
 
 function createEmptyValues(): MobileLineFormValues {
@@ -97,14 +98,30 @@ function getYearOptions(records: MobileLineRow[], tab: "active" | "completed") {
   return Array.from(new Set(records.map((record) => getMobileLineFilterDate(record, tab).slice(0, 4)))).sort((left, right) => right.localeCompare(left));
 }
 
-export function MobileLineManager({ isConfigured, carriers, mobileLines }: MobileLineManagerProps) {
+function parseTabParam(value: string | null): "active" | "completed" {
+  return value === "completed" ? "completed" : "active";
+}
+
+function parseYearParam(value: string | null) {
+  return value && /^\d{4}$/.test(value) ? value : "all";
+}
+
+function parseMonthParam(value: string | null) {
+  return value && /^(0[1-9]|1[0-2])$/.test(value) ? value : "all";
+}
+
+function parseLineTypeParam(value: string | null) {
+  return value === "campaign" || value === "normal" ? value : "all";
+}
+
+export function MobileLineManager({ isConfigured, carriers, mobileLines, initialFilters }: MobileLineManagerProps) {
   const router = useRouter();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
-  const [tab, setTab] = useState<"active" | "completed">("active");
-  const [yearFilter, setYearFilter] = useState("all");
-  const [monthFilter, setMonthFilter] = useState("all");
-  const [lineTypeFilter, setLineTypeFilter] = useState("all");
+  const [tab, setTab] = useState<"active" | "completed">(() => parseTabParam(typeof initialFilters?.tab === "string" ? initialFilters.tab : null));
+  const [yearFilter, setYearFilter] = useState(() => parseYearParam(typeof initialFilters?.year === "string" ? initialFilters.year : null));
+  const [monthFilter, setMonthFilter] = useState(() => parseMonthParam(typeof initialFilters?.month === "string" ? initialFilters.month : null));
+  const [lineTypeFilter, setLineTypeFilter] = useState(() => parseLineTypeParam(typeof initialFilters?.lineType === "string" ? initialFilters.lineType : null));
   const [carrierFilter, setCarrierFilter] = useState("all");
   const [contractStatusFilter, setContractStatusFilter] = useState("all");
   const [isPending, startTransition] = useTransition();
@@ -163,6 +180,7 @@ export function MobileLineManager({ isConfigured, carriers, mobileLines }: Mobil
   const tabCounts = getMobileLineTabCounts(filteredRecords);
   const visibleRecords = filterMobileLinesByTab(filteredRecords, tab);
   const yearOptions = getYearOptions(mobileLines, tab);
+  const hasLinkedFilters = Boolean(initialFilters?.tab || initialFilters?.year || initialFilters?.month || initialFilters?.lineType);
 
   useEffect(() => {
     form.reset(editingRecord ? toFormValues(editingRecord) : createEmptyValues());
@@ -183,14 +201,14 @@ export function MobileLineManager({ isConfigured, carriers, mobileLines }: Mobil
   });
 
   return (
-    <div className="space-y-5">
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+    <div className="space-y-3 md:space-y-5">
+      <div className="grid grid-cols-2 gap-1.5 sm:gap-3 xl:grid-cols-3">
         {summaryItems.map((item) => (
-          <SummaryStatCard key={item.label} {...item} className="min-h-[96px]" />
+          <SummaryStatCard key={item.label} {...item} className="min-h-[88px] md:min-h-[96px]" />
         ))}
       </div>
 
-      <div className="grid gap-5 xl:grid-cols-[1.18fr,0.82fr]">
+      <div className="grid gap-3 md:gap-5 xl:grid-cols-[1.18fr,0.82fr]">
         <SectionCard
           title="回線一覧"
           description="進行中と完了済を分けつつ、特典完了と解約済を別バッジで管理します。"
@@ -207,7 +225,7 @@ export function MobileLineManager({ isConfigured, carriers, mobileLines }: Mobil
         >
           {!isConfigured ? <ConfigurationNotice /> : null}
 
-          <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+          <div className="mt-3 grid gap-2.5 md:mt-4 md:grid-cols-2 md:gap-3 xl:grid-cols-5">
             <Field label="年">
               <Select value={yearFilter} onChange={(event) => setYearFilter(event.target.value)}>
                 <option value="all">すべて</option>
@@ -243,8 +261,9 @@ export function MobileLineManager({ isConfigured, carriers, mobileLines }: Mobil
             </Field>
           </div>
 
-          <div className="mt-3 flex flex-wrap gap-2 text-xs text-ink-sub">
+          <div className="mt-2.5 flex flex-wrap gap-1.5 text-[11px] text-ink-sub md:mt-3 md:gap-2 md:text-xs">
             <span className="rounded-full border border-border-theme bg-surface-alt/70 px-3 py-1.5">表示件数 {visibleRecords.length}</span>
+            {hasLinkedFilters ? <span className="rounded-full border border-border-theme bg-accent-bg px-3 py-1.5 text-accent">ダッシュボード絞り込み</span> : null}
             <button
               type="button"
               className="rounded-full border border-border-theme bg-surface px-3 py-1.5 transition hover:bg-surface-alt"
@@ -272,12 +291,12 @@ export function MobileLineManager({ isConfigured, carriers, mobileLines }: Mobil
                   : "border-border-theme bg-surface-alt/70";
 
               return (
-                <div key={record.id} className={["rounded-[26px] border p-4", cardClass].join(" ")}>
-                  <div className="flex items-start justify-between gap-3">
+                <div key={record.id} className={["rounded-[20px] border p-3", cardClass].join(" ")}>
+                  <div className="flex items-start justify-between gap-2.5">
                     <div>
-                      <p className="text-sm text-ink-sub">{formatDate(record.contract_date)}</p>
-                      <h3 className="mt-1 text-[15px] font-semibold">{record.title}</h3>
-                      <p className="mt-1 text-sm text-ink-sub">
+                      <p className="text-[12px] text-ink-sub md:text-sm">{formatDate(record.contract_date)}</p>
+                      <h3 className="mt-0.5 text-[14px] font-semibold leading-tight">{record.title}</h3>
+                      <p className="mt-0.5 text-[12px] text-ink-sub md:mt-1 md:text-sm">
                         {record.carrier?.name ?? "-"} / {maskPhoneNumber(record.phone_number)}
                       </p>
                     </div>
@@ -288,7 +307,7 @@ export function MobileLineManager({ isConfigured, carriers, mobileLines }: Mobil
                       {!record.is_completed && record.contract_status !== "cancelled" ? <StatusBadge tone="warning">進行中</StatusBadge> : null}
                     </div>
                   </div>
-                  <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+                  <div className="mt-3 grid grid-cols-2 gap-2.5 text-[12px] md:mt-4 md:gap-3 md:text-sm">
                     <div>
                       <p className="text-ink-sub">総コスト</p>
                       <p className="mt-1 font-semibold">{formatCurrency(rowTotalCost)}</p>
@@ -298,7 +317,7 @@ export function MobileLineManager({ isConfigured, carriers, mobileLines }: Mobil
                       <p className="mt-1 font-semibold">{formatCurrency(rowProfit)}</p>
                     </div>
                   </div>
-                  <div className="mt-4 flex flex-wrap items-center gap-2">
+                  <div className="mt-3 flex flex-wrap items-center gap-1.5">
                     <label className="inline-flex items-center gap-2 rounded-full border border-border-theme bg-surface px-3 py-2 text-xs font-medium">
                       <input
                         type="checkbox"
@@ -579,11 +598,11 @@ export function MobileLineManager({ isConfigured, carriers, mobileLines }: Mobil
               <Textarea {...form.register("memo")} />
             </Field>
 
-            <div className="rounded-[26px] border border-border-theme bg-surface-alt/40 p-4">
-              <div className="mb-4 flex items-center justify-between gap-3">
+            <div className="rounded-[22px] border border-border-theme bg-surface-alt/40 p-3.5 md:rounded-[26px] md:p-4">
+              <div className="mb-3 flex items-center justify-between gap-2.5 md:mb-4">
                 <div>
                   <h3 className="font-semibold">月額履歴</h3>
-                  <p className="text-sm text-ink-sub">日割りはせず、登録済み monthly_fee の合計で扱います。</p>
+                  <p className="text-[12px] text-ink-sub md:text-sm">日割りはせず、登録済み monthly_fee の合計で扱います。</p>
                 </div>
                 <Button
                   type="button"
@@ -594,9 +613,9 @@ export function MobileLineManager({ isConfigured, carriers, mobileLines }: Mobil
                 </Button>
               </div>
 
-              <div className="grid gap-3">
+              <div className="grid gap-2.5 md:gap-3">
                 {fieldArray.fields.map((field, index) => (
-                  <div key={field.id} className="grid gap-3 rounded-[22px] border border-border-theme bg-surface p-4">
+                  <div key={field.id} className="grid gap-2.5 rounded-[20px] border border-border-theme bg-surface p-3 md:gap-3 md:rounded-[22px] md:p-4">
                     <div className="grid gap-3 md:grid-cols-3">
                       <Field label="開始日" error={form.formState.errors.monthly_costs?.[index]?.start_date?.message}>
                         <Input type="date" {...form.register(`monthly_costs.${index}.start_date`)} />

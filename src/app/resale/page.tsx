@@ -2,17 +2,22 @@
 import { ResaleManager } from "@/features/resale/resale-manager";
 import { getResalePageData } from "@/lib/data";
 
-export default async function ResalePage() {
+type ResalePageProps = {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+};
+
+export default async function ResalePage({ searchParams }: ResalePageProps) {
   const data = await getResalePageData();
+  const filters = await searchParams;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       <PageHeader
         eyebrow="Resale"
         title="転売管理"
         description="仕入先と販売先を紐づけながら、取引ごとの利益を管理できます。"
       />
-      <ResaleManager {...data} />
+      <ResaleManager {...data} initialFilters={filters} />
     </div>
   );
 }
