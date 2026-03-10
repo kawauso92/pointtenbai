@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import type { Database } from "@/lib/database.types";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { normalizeOptionalDate, normalizeOptionalText, parseNumberInput } from "@/lib/utils";
+import { getTodayDateString, normalizeOptionalDate, normalizeOptionalText, parseNumberInput } from "@/lib/utils";
 import { resaleTransactionFormSchema, type ResaleTransactionFormValues } from "@/lib/validation/forms";
 
 function getClient() {
@@ -16,6 +16,14 @@ function getClient() {
   return client;
 }
 
+function resolveSaleDate(values: Pick<ResaleTransactionFormValues, "is_completed" | "sale_date">) {
+  if (!values.is_completed) {
+    return null;
+  }
+
+  return normalizeOptionalDate(values.sale_date) ?? getTodayDateString();
+}
+
 function buildPayload(values: ResaleTransactionFormValues) {
   return {
     purchase_date: values.purchase_date,
@@ -26,7 +34,7 @@ function buildPayload(values: ResaleTransactionFormValues) {
     sales_channel_note: normalizeOptionalText(values.sales_channel_note),
     purchase_amount: parseNumberInput(values.purchase_amount),
     sale_amount: values.sale_amount ? parseNumberInput(values.sale_amount) : null,
-    sale_date: normalizeOptionalDate(values.sale_date),
+    sale_date: resolveSaleDate(values),
     discount_amount: parseNumberInput(values.discount_amount),
     shipping_fee: parseNumberInput(values.shipping_fee),
     fee_amount: parseNumberInput(values.fee_amount),
@@ -81,7 +89,18 @@ export async function deleteResaleTransaction(id: string) {
 export async function toggleResaleTransactionCompleted(id: string, isCompleted: boolean) {
   const client = getClient();
   const resaleTransactionsTable = (client as any).from("resale_transactions");
-  const { error } = await resaleTransactionsTable.update({ is_completed: isCompleted }).eq("id", id);
+  const { data, error: selectError } = await resaleTransactionsTable.select("sale_date").eq("id", id).single();
+
+  if (selectError) {
+    throw selectError;
+  }
+
+  const { error } = await resaleTransactionsTable
+    .update({
+      is_completed: isCompleted,
+      sale_date: isCompleted ? data.sale_date ?? getTodayDateString() : null,
+    })
+    .eq("id", id);
 
   if (error) {
     throw error;

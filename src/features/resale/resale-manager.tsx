@@ -19,6 +19,7 @@ import {
   computeResaleSummary,
   filterResaleTransactionsByTab,
   getResaleTabCounts,
+  getResaleTransactionFilterDate,
 } from "@/lib/analytics";
 import { calculateResaleProfit } from "@/lib/calculations";
 import type { PurchaseSourceOption, ResaleTransactionRow, SalesChannelOption } from "@/lib/data";
@@ -73,8 +74,8 @@ function toFormValues(record: ResaleTransactionRow): ResaleTransactionFormValues
   };
 }
 
-function getYearOptions(records: ResaleTransactionRow[]) {
-  return Array.from(new Set(records.map((record) => record.purchase_date.slice(0, 4)))).sort((left, right) => right.localeCompare(left));
+function getYearOptions(records: ResaleTransactionRow[], tab: "active" | "completed") {
+  return Array.from(new Set(records.map((record) => getResaleTransactionFilterDate(record, tab).slice(0, 4)))).sort((left, right) => right.localeCompare(left));
 }
 
 export function ResaleManager({ isConfigured, purchaseSources, salesChannels, resaleTransactions }: ResaleManagerProps) {
@@ -102,11 +103,13 @@ export function ResaleManager({ isConfigured, purchaseSources, salesChannels, re
     discount_amount: parseNumberInput(watched.discount_amount),
   });
   const filteredRecords = resaleTransactions.filter((record) => {
-    if (yearFilter !== "all" && record.purchase_date.slice(0, 4) !== yearFilter) {
+    const filterDate = getResaleTransactionFilterDate(record, tab);
+
+    if (yearFilter !== "all" && filterDate.slice(0, 4) !== yearFilter) {
       return false;
     }
 
-    if (monthFilter !== "all" && record.purchase_date.slice(5, 7) !== monthFilter) {
+    if (monthFilter !== "all" && filterDate.slice(5, 7) !== monthFilter) {
       return false;
     }
 
@@ -123,7 +126,7 @@ export function ResaleManager({ isConfigured, purchaseSources, salesChannels, re
   const summaryItems = computeResaleSummary(filteredRecords);
   const tabCounts = getResaleTabCounts(filteredRecords);
   const visibleRecords = filterResaleTransactionsByTab(filteredRecords, tab);
-  const yearOptions = getYearOptions(resaleTransactions);
+  const yearOptions = getYearOptions(resaleTransactions, tab);
 
   useEffect(() => {
     form.reset(editingRecord ? toFormValues(editingRecord) : createEmptyValues());
@@ -478,3 +481,6 @@ export function ResaleManager({ isConfigured, purchaseSources, salesChannels, re
     </div>
   );
 }
+
+
+

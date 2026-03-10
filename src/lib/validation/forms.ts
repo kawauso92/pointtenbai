@@ -1,14 +1,14 @@
-import { z } from "zod";
+﻿import { z } from "zod";
 
 const datePattern = /^\d{4}-\d{2}-\d{2}$/;
 const numberPattern = /^\d+(\.\d{1,2})?$/;
 const integerPattern = /^-?\d+$/;
 
-function requiredMoney(message = "0以上の数値を入力してください") {
+function requiredMoney(message = "0以上の金額を入力してください") {
   return z
     .string()
     .trim()
-    .min(1, "必須です")
+    .min(1, "必須項目です")
     .refine((value) => numberPattern.test(value) && Number(value) >= 0, message);
 }
 
@@ -16,14 +16,14 @@ function optionalMoney() {
   return z
     .string()
     .trim()
-    .refine((value) => value === "" || (numberPattern.test(value) && Number(value) >= 0), "0以上の数値を入力してください");
+    .refine((value) => value === "" || (numberPattern.test(value) && Number(value) >= 0), "0以上の金額を入力してください");
 }
 
 function requiredDate() {
   return z
     .string()
     .trim()
-    .min(1, "必須です")
+    .min(1, "必須項目です")
     .refine((value) => datePattern.test(value), "YYYY-MM-DD 形式で入力してください");
 }
 

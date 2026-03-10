@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import type { Database } from "@/lib/database.types";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { normalizeOptionalDate, normalizeOptionalText, parseNumberInput } from "@/lib/utils";
+import { getTodayDateString, normalizeOptionalDate, normalizeOptionalText, parseNumberInput } from "@/lib/utils";
 import { mobileLineFormSchema, type MobileLineFormValues } from "@/lib/validation/forms";
 
 function getClient() {
@@ -14,6 +14,14 @@ function getClient() {
   }
 
   return client;
+}
+
+function resolveCompletedDate(values: Pick<MobileLineFormValues, "is_completed" | "completed_date">) {
+  if (!values.is_completed) {
+    return null;
+  }
+
+  return normalizeOptionalDate(values.completed_date) ?? getTodayDateString();
 }
 
 function buildLineValues(values: MobileLineFormValues) {
@@ -29,7 +37,7 @@ function buildLineValues(values: MobileLineFormValues) {
     initial_cost: parseNumberInput(values.initial_cost),
     cancellation_cost: parseNumberInput(values.cancellation_cost),
     cancellation_date: normalizeOptionalDate(values.cancellation_date),
-    completed_date: normalizeOptionalDate(values.completed_date),
+    completed_date: resolveCompletedDate(values),
     contract_status: values.contract_status,
     device_name: normalizeOptionalText(values.device_name),
     return_due_date: normalizeOptionalDate(values.return_due_date),
@@ -114,7 +122,18 @@ export async function deleteMobileLine(id: string) {
 export async function toggleMobileLineCompleted(id: string, isCompleted: boolean) {
   const client = getClient();
   const mobileLinesTable = (client as any).from("mobile_lines");
-  const { error } = await mobileLinesTable.update({ is_completed: isCompleted }).eq("id", id);
+  const { data, error: selectError } = await mobileLinesTable.select("completed_date").eq("id", id).single();
+
+  if (selectError) {
+    throw selectError;
+  }
+
+  const { error } = await mobileLinesTable
+    .update({
+      is_completed: isCompleted,
+      completed_date: isCompleted ? data.completed_date ?? getTodayDateString() : null,
+    })
+    .eq("id", id);
 
   if (error) {
     throw error;

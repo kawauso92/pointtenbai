@@ -74,6 +74,18 @@ function getMobileAggregationDate(record: MobileLineRow) {
   return record.is_completed ? record.completed_date ?? record.cancellation_date ?? record.contract_date : record.contract_date;
 }
 
+export function getPointActivityFilterDate(record: PointActivityRow, tab: "active" | "completed") {
+  return tab === "completed" ? getPointAggregationDate(record) : record.activity_date;
+}
+
+export function getResaleTransactionFilterDate(record: ResaleTransactionRow, tab: "active" | "completed") {
+  return tab === "completed" ? getResaleAggregationDate(record) : record.purchase_date;
+}
+
+export function getMobileLineFilterDate(record: MobileLineRow, tab: "active" | "completed") {
+  return tab === "completed" ? getMobileAggregationDate(record) : record.contract_date;
+}
+
 function createEmptyCategoryTotals(): CategoryTotals {
   return {
     point: { actual: 0, estimated: 0 },
@@ -256,7 +268,7 @@ export function computePointActivitySummary(records: PointActivityRow[]): Summar
       kind: "currency",
     },
     {
-      label: "実報酬合計",
+      label: "確定報酬合計",
       value: completedRecords.reduce((total, record) => total + Number(record.reward_amount), 0),
       tone: "success",
       kind: "currency",
@@ -278,7 +290,7 @@ export function computeResaleSummary(records: ResaleTransactionRow[]): SummaryIt
       tone: "success",
     },
     {
-      label: "仕入れ値合計",
+      label: "仕入額合計",
       value: records.reduce((total, record) => total + Number(record.purchase_amount), 0),
       kind: "currency",
     },
@@ -311,7 +323,7 @@ export function computeMobileLineSummary(records: MobileLineRow[]): SummaryItem[
     { label: "解約済件数", value: cancelledLines.length, tone: "muted" },
     { label: "案件回線数", value: campaignLines.length },
     {
-      label: "報酬合計",
+      label: "確定報酬合計",
       value: rewardCompletedLines.reduce((total, record) => total + Number(record.reward_amount ?? 0), 0),
       kind: "currency",
       tone: "success",

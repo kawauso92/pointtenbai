@@ -1,10 +1,10 @@
-export const lineTypeOptions = [
+﻿export const lineTypeOptions = [
   { value: "campaign", label: "案件回線" },
   { value: "normal", label: "通常利用回線" },
 ] as const;
 
 export const contractStatusOptions = [
-  { value: "active", label: "維持中" },
+  { value: "active", label: "契約中" },
   { value: "cancelled", label: "解約済" },
 ] as const;
 

@@ -229,7 +229,7 @@ export function DashboardOverview({ pointActivities, resaleTransactions, mobileL
               </p>
             </div>
 
-            <div className="mt-4 grid grid-cols-3 gap-2 md:gap-3">
+            <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-3 md:gap-3">
               <div className="rounded-[18px] border border-border-theme bg-surface px-3 py-3 text-center">
                 <p className="text-[11px] text-ink-sub">件数</p>
                 <p className="mt-1 text-lg font-semibold tracking-tight">{monthRow.recordCount}</p>
@@ -296,3 +296,4 @@ export function DashboardOverview({ pointActivities, resaleTransactions, mobileL
     </div>
   );
 }
+

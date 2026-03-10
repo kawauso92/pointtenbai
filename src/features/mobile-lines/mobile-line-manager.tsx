@@ -23,6 +23,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   computeMobileLineSummary,
   filterMobileLinesByTab,
+  getMobileLineFilterDate,
   getMobileLineTabCounts,
 } from "@/lib/analytics";
 import { calculateMobileLineProfit, calculateMobileLineTotalCost } from "@/lib/calculations";
@@ -92,8 +93,8 @@ function toFormValues(record: MobileLineRow): MobileLineFormValues {
   };
 }
 
-function getYearOptions(records: MobileLineRow[]) {
-  return Array.from(new Set(records.map((record) => record.contract_date.slice(0, 4)))).sort((left, right) => right.localeCompare(left));
+function getYearOptions(records: MobileLineRow[], tab: "active" | "completed") {
+  return Array.from(new Set(records.map((record) => getMobileLineFilterDate(record, tab).slice(0, 4)))).sort((left, right) => right.localeCompare(left));
 }
 
 export function MobileLineManager({ isConfigured, carriers, mobileLines }: MobileLineManagerProps) {
@@ -134,11 +135,13 @@ export function MobileLineManager({ isConfigured, carriers, mobileLines }: Mobil
     previewCosts,
   );
   const filteredRecords = mobileLines.filter((record) => {
-    if (yearFilter !== "all" && record.contract_date.slice(0, 4) !== yearFilter) {
+    const filterDate = getMobileLineFilterDate(record, tab);
+
+    if (yearFilter !== "all" && filterDate.slice(0, 4) !== yearFilter) {
       return false;
     }
 
-    if (monthFilter !== "all" && record.contract_date.slice(5, 7) !== monthFilter) {
+    if (monthFilter !== "all" && filterDate.slice(5, 7) !== monthFilter) {
       return false;
     }
 
@@ -159,7 +162,7 @@ export function MobileLineManager({ isConfigured, carriers, mobileLines }: Mobil
   const summaryItems = computeMobileLineSummary(filteredRecords);
   const tabCounts = getMobileLineTabCounts(filteredRecords);
   const visibleRecords = filterMobileLinesByTab(filteredRecords, tab);
-  const yearOptions = getYearOptions(mobileLines);
+  const yearOptions = getYearOptions(mobileLines, tab);
 
   useEffect(() => {
     form.reset(editingRecord ? toFormValues(editingRecord) : createEmptyValues());
@@ -605,13 +608,13 @@ export function MobileLineManager({ isConfigured, carriers, mobileLines }: Mobil
                         <Input type="number" min="0" step="1" {...form.register(`monthly_costs.${index}.monthly_fee`)} />
                       </Field>
                     </div>
-                    <div className="flex items-end gap-3">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
                       <div className="flex-1">
                         <Field label="メモ" error={form.formState.errors.monthly_costs?.[index]?.memo?.message}>
                           <Input {...form.register(`monthly_costs.${index}.memo`)} />
                         </Field>
                       </div>
-                      <Button type="button" variant="ghost" onClick={() => fieldArray.remove(index)}>削除</Button>
+                      <Button type="button" variant="ghost" className="w-full sm:w-auto" onClick={() => fieldArray.remove(index)}>削除</Button>
                     </div>
                   </div>
                 ))}
@@ -641,3 +644,6 @@ export function MobileLineManager({ isConfigured, carriers, mobileLines }: Mobil
     </div>
   );
 }
+
+
+

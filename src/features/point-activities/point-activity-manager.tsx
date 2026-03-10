@@ -18,6 +18,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   computePointActivitySummary,
   filterPointActivitiesByTab,
+  getPointActivityFilterDate,
   getPointActivityTabCounts,
 } from "@/lib/analytics";
 import type { PointActivityRow, PointSiteOption } from "@/lib/data";
@@ -59,8 +60,8 @@ function toFormValues(record: PointActivityRow): PointActivityFormValues {
   };
 }
 
-function getYearOptions(records: PointActivityRow[]) {
-  return Array.from(new Set(records.map((record) => record.activity_date.slice(0, 4)))).sort((left, right) => right.localeCompare(left));
+function getYearOptions(records: PointActivityRow[], tab: "active" | "completed") {
+  return Array.from(new Set(records.map((record) => getPointActivityFilterDate(record, tab).slice(0, 4)))).sort((left, right) => right.localeCompare(left));
 }
 
 export function PointActivityManager({ isConfigured, pointSites, pointActivities }: PointActivityManagerProps) {
@@ -78,11 +79,13 @@ export function PointActivityManager({ isConfigured, pointSites, pointActivities
     defaultValues: createEmptyValues(),
   });
   const filteredRecords = pointActivities.filter((record) => {
-    if (yearFilter !== "all" && record.activity_date.slice(0, 4) !== yearFilter) {
+    const filterDate = getPointActivityFilterDate(record, tab);
+
+    if (yearFilter !== "all" && filterDate.slice(0, 4) !== yearFilter) {
       return false;
     }
 
-    if (monthFilter !== "all" && record.activity_date.slice(5, 7) !== monthFilter) {
+    if (monthFilter !== "all" && filterDate.slice(5, 7) !== monthFilter) {
       return false;
     }
 
@@ -95,7 +98,7 @@ export function PointActivityManager({ isConfigured, pointSites, pointActivities
   const summaryItems = computePointActivitySummary(filteredRecords);
   const tabCounts = getPointActivityTabCounts(filteredRecords);
   const visibleRecords = filterPointActivitiesByTab(filteredRecords, tab);
-  const yearOptions = getYearOptions(pointActivities);
+  const yearOptions = getYearOptions(pointActivities, tab);
 
   useEffect(() => {
     form.reset(editingRecord ? toFormValues(editingRecord) : createEmptyValues());
@@ -394,3 +397,6 @@ export function PointActivityManager({ isConfigured, pointSites, pointActivities
     </div>
   );
 }
+
+
+

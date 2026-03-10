@@ -1,3 +1,5 @@
+﻿import { format } from "date-fns";
+
 export function formatCurrency(value: number | string | null | undefined) {
   const amount = Number(value ?? 0);
 
@@ -43,4 +45,8 @@ export function parseNumberInput(value: string | number | null | undefined, fall
 
   const parsed = typeof value === "number" ? value : Number(value);
   return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+export function getTodayDateString(now = new Date()) {
+  return format(now, "yyyy-MM-dd");
 }
