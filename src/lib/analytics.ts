@@ -491,3 +491,4 @@ export function filterResaleTransactionsByTab(records: ResaleTransactionRow[], t
 export function filterMobileLinesByTab(records: MobileLineRow[], tab: "active" | "completed") {
   return records.filter((record) => (tab === "active" ? !record.is_completed : record.is_completed));
 }
+

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
@@ -161,14 +161,14 @@ export function ResaleManager({ isConfigured, purchaseSources, salesChannels, re
   });
 
   return (
-    <div className="space-y-3 md:space-y-5">
-      <div className="grid grid-cols-2 gap-1.5 sm:gap-3 xl:grid-cols-3">
+    <div className="space-y-4">
+      <div className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-3">
         {summaryItems.map((item) => (
-          <SummaryStatCard key={item.label} {...item} className="min-h-[88px] md:min-h-[96px]" />
+          <SummaryStatCard key={item.label} {...item} className="min-h-[84px]" />
         ))}
       </div>
 
-      <div className="grid gap-3 md:gap-5 xl:grid-cols-[1.14fr,0.86fr]">
+      <div className="grid gap-4 xl:grid-cols-[1.2fr,0.8fr]">
         <SectionCard
           title="取引一覧"
           description="進行中と完了済を切り替えながら、仕入先・販売先ごとの利益を確認できます。"
@@ -185,7 +185,7 @@ export function ResaleManager({ isConfigured, purchaseSources, salesChannels, re
         >
           {!isConfigured ? <ConfigurationNotice /> : null}
 
-          <div className="mt-3 grid gap-2.5 md:mt-4 md:grid-cols-2 md:gap-3 xl:grid-cols-4">
+          <div className="mt-3 grid gap-1.5 md:grid-cols-2 xl:grid-cols-4">
             <Field label="年">
               <Select value={yearFilter} onChange={(event) => setYearFilter(event.target.value)}>
                 <option value="all">すべて</option>
@@ -215,12 +215,12 @@ export function ResaleManager({ isConfigured, purchaseSources, salesChannels, re
             </Field>
           </div>
 
-          <div className="mt-2.5 flex flex-wrap gap-1.5 text-[11px] text-ink-sub md:mt-3 md:gap-2 md:text-xs">
-            <span className="rounded-full border border-border-theme bg-surface-alt/70 px-2.5 py-1 md:px-3 md:py-1.5">表示件数 {visibleRecords.length}</span>
-            {hasLinkedFilters ? <span className="rounded-full border border-border-theme bg-accent-bg px-2.5 py-1 text-accent md:px-3 md:py-1.5">ダッシュボード絞り込み</span> : null}
+          <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[11px] text-ink-sub">
+            <span className="rounded-full border border-border-theme bg-surface-alt/70 px-2.5 py-1">表示件数 {visibleRecords.length}</span>
+            {hasLinkedFilters ? <span className="rounded-full border border-border-theme bg-accent-bg px-2.5 py-1 text-accent">ダッシュボード絞り込み</span> : null}
             <button
               type="button"
-              className="rounded-full border border-border-theme bg-surface px-2.5 py-1 transition hover:bg-surface-alt md:px-3 md:py-1.5"
+              className="rounded-full border border-border-theme bg-surface px-2.5 py-1 transition hover:bg-surface-alt"
               onClick={() => {
                 setYearFilter("all");
                 setMonthFilter("all");
@@ -232,7 +232,7 @@ export function ResaleManager({ isConfigured, purchaseSources, salesChannels, re
             </button>
           </div>
 
-          <div className="mt-3 space-y-2.5 md:mt-4 md:hidden">
+          <div className="mt-3 space-y-2.5 md:hidden">
             {visibleRecords.map((record) => (
               <div
                 key={record.id}
@@ -253,7 +253,7 @@ export function ResaleManager({ isConfigured, purchaseSources, salesChannels, re
                     {record.is_completed ? "完了" : "見込み"}
                   </StatusBadge>
                 </div>
-                <div className="mt-3 grid grid-cols-2 gap-2.5 text-[12px] md:mt-4 md:gap-3 md:text-sm">
+                <div className="mt-3 grid grid-cols-2 gap-2.5 text-[13px] md:text-sm">
                   <div>
                     <p className="text-ink-sub">仕入額</p>
                     <p className="mt-1 font-semibold">{formatCurrency(record.purchase_amount)}</p>
@@ -264,7 +264,7 @@ export function ResaleManager({ isConfigured, purchaseSources, salesChannels, re
                   </div>
                 </div>
                 <div className="mt-3 flex flex-wrap items-center gap-1.5">
-                  <label className="inline-flex items-center gap-1.5 rounded-full border border-border-theme bg-surface px-2.5 py-1.5 text-[11px] font-medium md:px-3 md:py-2 md:text-xs">
+                  <label className="inline-flex items-center gap-2 rounded-full border border-border-theme bg-surface px-3 py-2 text-xs font-medium">
                     <input
                       type="checkbox"
                       className="h-4 w-4 rounded"
@@ -312,8 +312,8 @@ export function ResaleManager({ isConfigured, purchaseSources, salesChannels, re
             {visibleRecords.length === 0 ? <p className="text-sm text-ink-sub">該当データがありません。</p> : null}
           </div>
 
-          <div className="mt-4 hidden overflow-hidden rounded-[28px] border border-border-theme md:block">
-            <div className="grid grid-cols-[0.92fr,1.45fr,1fr,1fr,0.88fr,0.88fr,0.76fr,1.2fr] gap-3 bg-surface-alt px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-ink-sub">
+          <div className="mt-3 hidden overflow-hidden rounded-[24px] border border-border-theme md:block">
+            <div className="grid grid-cols-[0.92fr,1.45fr,1fr,1fr,0.88fr,0.88fr,0.76fr,1.2fr] gap-2.5 bg-surface-alt px-3.5 py-2.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-ink-sub">
               <span>仕入日</span>
               <span>商品名</span>
               <span>仕入先</span>
@@ -328,7 +328,7 @@ export function ResaleManager({ isConfigured, purchaseSources, salesChannels, re
                 <div
                   key={record.id}
                   className={[
-                    "grid grid-cols-[0.92fr,1.45fr,1fr,1fr,0.88fr,0.88fr,0.76fr,1.2fr] gap-3 px-4 py-3.5",
+                    "grid grid-cols-[0.92fr,1.45fr,1fr,1fr,0.88fr,0.88fr,0.76fr,1.2fr] gap-2.5 px-3.5 py-2.5",
                     record.is_completed ? "bg-profit-bg" : "bg-surface/75",
                   ].join(" ")}
                 >
@@ -393,12 +393,12 @@ export function ResaleManager({ isConfigured, purchaseSources, salesChannels, re
         </SectionCard>
 
         <SectionCard title="追加 / 編集" description="売却額と各種費用から利益を確認しながら登録できます。">
-          <div className="mb-3 rounded-[18px] border border-accent/20 bg-accent-bg p-3 text-[12px] text-accent md:mb-4 md:rounded-[22px] md:p-3.5 md:text-sm">
+          <div className="mb-2.5 rounded-[18px] border border-accent/20 bg-accent-bg px-3.5 py-2.5 text-[13px] text-accent md:text-sm">
             現在の利益プレビュー: <span className="font-semibold">{formatCurrency(previewProfit)}</span>
           </div>
 
-          <form className="grid gap-3 md:gap-4" onSubmit={onSubmit}>
-            <div className="grid gap-4 md:grid-cols-2">
+          <form className="grid gap-3" onSubmit={onSubmit}>
+            <div className="grid gap-3 md:grid-cols-2">
               <Field label="仕入日" required error={form.formState.errors.purchase_date?.message}>
                 <Input type="date" {...form.register("purchase_date")} />
               </Field>
@@ -407,7 +407,7 @@ export function ResaleManager({ isConfigured, purchaseSources, salesChannels, re
               </Field>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-3 md:grid-cols-2">
               <Field label="仕入先区分" required error={form.formState.errors.purchase_source_id?.message}>
                 <Select {...form.register("purchase_source_id")}>
                   <option value="">選択してください</option>
@@ -426,7 +426,7 @@ export function ResaleManager({ isConfigured, purchaseSources, salesChannels, re
               </Field>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-3 md:grid-cols-2">
               <Field label="仕入先メモ" error={form.formState.errors.purchase_source_note?.message}>
                 <Input {...form.register("purchase_source_note")} />
               </Field>
@@ -435,7 +435,7 @@ export function ResaleManager({ isConfigured, purchaseSources, salesChannels, re
               </Field>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-3 md:grid-cols-2">
               <Field label="仕入額" required error={form.formState.errors.purchase_amount?.message}>
                 <Input type="number" min="0" step="1" {...form.register("purchase_amount")} />
               </Field>
@@ -444,7 +444,7 @@ export function ResaleManager({ isConfigured, purchaseSources, salesChannels, re
               </Field>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-3 md:grid-cols-2">
               <Field label="売却日" error={form.formState.errors.sale_date?.message}>
                 <Input type="date" {...form.register("sale_date")} />
               </Field>
@@ -453,7 +453,7 @@ export function ResaleManager({ isConfigured, purchaseSources, salesChannels, re
               </Field>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid gap-3 md:grid-cols-3">
               <Field label="送料" required error={form.formState.errors.shipping_fee?.message}>
                 <Input type="number" min="0" step="1" {...form.register("shipping_fee")} />
               </Field>
@@ -465,7 +465,7 @@ export function ResaleManager({ isConfigured, purchaseSources, salesChannels, re
               </Field>
             </div>
 
-            <label className="flex items-center gap-3 rounded-[20px] border border-border-theme bg-surface-alt/70 px-4 py-3 text-sm">
+            <label className="flex items-center gap-3 rounded-[18px] border border-border-theme bg-surface-alt/70 px-3.5 py-2.5 text-sm">
               <input type="checkbox" className="h-4 w-4 rounded" {...form.register("is_completed")} />
               売却完了として扱う
             </label>
@@ -496,6 +496,3 @@ export function ResaleManager({ isConfigured, purchaseSources, salesChannels, re
     </div>
   );
 }
-
-
-

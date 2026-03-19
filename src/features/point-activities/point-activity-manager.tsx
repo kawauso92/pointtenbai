@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
@@ -133,17 +133,17 @@ export function PointActivityManager({ isConfigured, pointSites, pointActivities
   });
 
   return (
-    <div className="space-y-3 md:space-y-5">
-      <div className="grid grid-cols-2 gap-1.5 sm:gap-3 xl:grid-cols-4">
+    <div className="space-y-4">
+      <div className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-4">
         {summaryItems.map((item) => (
-          <SummaryStatCard key={item.label} {...item} className="min-h-[88px] md:min-h-[96px]" />
+          <SummaryStatCard key={item.label} {...item} className="min-h-[84px]" />
         ))}
       </div>
 
-      <div className="grid gap-3 md:gap-5 xl:grid-cols-[1.08fr,0.92fr]">
+      <div className="grid gap-4 xl:grid-cols-[1.18fr,0.82fr]">
         <SectionCard
           title="案件一覧"
-          description="進行中と完了済を切り替えながら、見込みと実利益の元データを管理します。"
+          description="進行中と完了済を切り替えながら、確定・見込み報酬の元データを管理します。"
           action={
             <SegmentedTabs
               items={[
@@ -157,7 +157,7 @@ export function PointActivityManager({ isConfigured, pointSites, pointActivities
         >
           {!isConfigured ? <ConfigurationNotice /> : null}
 
-          <div className="mt-3 grid gap-2.5 md:mt-4 md:grid-cols-3 md:gap-3">
+          <div className="mt-3 grid gap-1.5 md:grid-cols-3">
             <Field label="年">
               <Select value={yearFilter} onChange={(event) => setYearFilter(event.target.value)}>
                 <option value="all">すべて</option>
@@ -181,12 +181,12 @@ export function PointActivityManager({ isConfigured, pointSites, pointActivities
             </Field>
           </div>
 
-          <div className="mt-2.5 flex flex-wrap gap-1.5 text-[11px] text-ink-sub md:mt-3 md:gap-2 md:text-xs">
-            <span className="rounded-full border border-border-theme bg-surface-alt/70 px-2.5 py-1 md:px-3 md:py-1.5">表示件数 {visibleRecords.length}</span>
-            {hasLinkedFilters ? <span className="rounded-full border border-border-theme bg-accent-bg px-2.5 py-1 text-accent md:px-3 md:py-1.5">ダッシュボード絞り込み</span> : null}
+          <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[11px] text-ink-sub">
+            <span className="rounded-full border border-border-theme bg-surface-alt/70 px-2.5 py-1">表示件数 {visibleRecords.length}</span>
+            {hasLinkedFilters ? <span className="rounded-full border border-border-theme bg-accent-bg px-2.5 py-1 text-accent">ダッシュボード絞り込み</span> : null}
             <button
               type="button"
-              className="rounded-full border border-border-theme bg-surface px-2.5 py-1 transition hover:bg-surface-alt md:px-3 md:py-1.5"
+              className="rounded-full border border-border-theme bg-surface px-2.5 py-1 transition hover:bg-surface-alt"
               onClick={() => {
                 setYearFilter("all");
                 setMonthFilter("all");
@@ -197,7 +197,7 @@ export function PointActivityManager({ isConfigured, pointSites, pointActivities
             </button>
           </div>
 
-          <div className="mt-3 space-y-2.5 md:mt-4 md:hidden">
+          <div className="mt-3 space-y-2.5 md:hidden">
             {visibleRecords.map((record) => (
               <div
                 key={record.id}
@@ -216,9 +216,9 @@ export function PointActivityManager({ isConfigured, pointSites, pointActivities
                     {record.is_completed ? "完了" : "見込み"}
                   </StatusBadge>
                 </div>
-                <p className="mt-3 text-[1.1rem] font-semibold tracking-tight">{formatCurrency(record.reward_amount)}</p>
+                <p className="mt-3 text-lg font-semibold tracking-tight">{formatCurrency(record.reward_amount)}</p>
                 <div className="mt-3 flex flex-wrap items-center gap-1.5">
-                  <label className="inline-flex items-center gap-1.5 rounded-full border border-border-theme bg-surface px-2.5 py-1.5 text-[11px] font-medium md:px-3 md:py-2 md:text-xs">
+                  <label className="inline-flex items-center gap-2 rounded-full border border-border-theme bg-surface px-3 py-2 text-xs font-medium">
                     <input
                       type="checkbox"
                       className="h-4 w-4 rounded"
@@ -266,8 +266,8 @@ export function PointActivityManager({ isConfigured, pointSites, pointActivities
             {visibleRecords.length === 0 ? <p className="text-sm text-ink-sub">該当データがありません。</p> : null}
           </div>
 
-          <div className="mt-4 hidden overflow-hidden rounded-[28px] border border-border-theme md:block">
-            <div className="grid grid-cols-[0.92fr,1fr,1.5fr,0.82fr,0.78fr,0.92fr,1.2fr] gap-3 bg-surface-alt px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-ink-sub">
+          <div className="mt-3 hidden overflow-hidden rounded-[24px] border border-border-theme md:block">
+            <div className="grid grid-cols-[0.92fr,1fr,1.5fr,0.82fr,0.78fr,0.92fr,1.2fr] gap-2.5 bg-surface-alt px-3.5 py-2.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-ink-sub">
               <span>実施日</span>
               <span>サイト</span>
               <span>案件名</span>
@@ -281,7 +281,7 @@ export function PointActivityManager({ isConfigured, pointSites, pointActivities
                 <div
                   key={record.id}
                   className={[
-                    "grid grid-cols-[0.92fr,1fr,1.5fr,0.82fr,0.78fr,0.92fr,1.2fr] gap-3 px-4 py-3.5 text-sm",
+                    "grid grid-cols-[0.92fr,1fr,1.5fr,0.82fr,0.78fr,0.92fr,1.2fr] gap-2.5 px-3.5 py-2.5 text-[13px] md:text-sm",
                     record.is_completed ? "bg-profit-bg" : "bg-surface/75",
                   ].join(" ")}
                 >
@@ -344,9 +344,9 @@ export function PointActivityManager({ isConfigured, pointSites, pointActivities
           </div>
         </SectionCard>
 
-        <SectionCard title="追加 / 編集" description="完了チェックありを実利益、なしを見込みとして扱います。">
-          <form className="grid gap-4" onSubmit={onSubmit}>
-            <div className="grid gap-4 md:grid-cols-2">
+        <SectionCard title="追加 / 編集" description="完了チェックありを確定報酬、なしを見込み報酬として扱います。">
+          <form className="grid gap-3" onSubmit={onSubmit}>
+            <div className="grid gap-3 md:grid-cols-2">
               <Field label="実施日" required error={form.formState.errors.activity_date?.message}>
                 <Input type="date" {...form.register("activity_date")} />
               </Field>
@@ -364,7 +364,7 @@ export function PointActivityManager({ isConfigured, pointSites, pointActivities
               <Input {...form.register("title")} placeholder="案件名を入力" />
             </Field>
 
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-3 md:grid-cols-2">
               <Field label="報酬額" required error={form.formState.errors.reward_amount?.message}>
                 <Input type="number" min="0" step="1" {...form.register("reward_amount")} />
               </Field>
@@ -373,7 +373,7 @@ export function PointActivityManager({ isConfigured, pointSites, pointActivities
               </Field>
             </div>
 
-            <label className="flex items-center gap-3 rounded-[20px] border border-border-theme bg-surface-alt/70 px-4 py-3 text-sm">
+            <label className="flex items-center gap-3 rounded-[18px] border border-border-theme bg-surface-alt/70 px-3.5 py-2.5 text-sm">
               <input type="checkbox" className="h-4 w-4 rounded" {...form.register("is_completed")} />
               完了済として扱う
             </label>
@@ -412,6 +412,3 @@ export function PointActivityManager({ isConfigured, pointSites, pointActivities
     </div>
   );
 }
-
-
-

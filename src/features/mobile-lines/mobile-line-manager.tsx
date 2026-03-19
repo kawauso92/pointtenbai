@@ -201,14 +201,14 @@ export function MobileLineManager({ isConfigured, carriers, mobileLines, initial
   });
 
   return (
-    <div className="space-y-3 md:space-y-5">
-      <div className="grid grid-cols-2 gap-1.5 sm:gap-3 xl:grid-cols-3">
+    <div className="space-y-4">
+      <div className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-3">
         {summaryItems.map((item) => (
-          <SummaryStatCard key={item.label} {...item} className="min-h-[88px] md:min-h-[96px]" />
+          <SummaryStatCard key={item.label} {...item} className="min-h-[84px]" />
         ))}
       </div>
 
-      <div className="grid gap-3 md:gap-5 xl:grid-cols-[1.18fr,0.82fr]">
+      <div className="grid gap-4 xl:grid-cols-[1.24fr,0.76fr]">
         <SectionCard
           title="回線一覧"
           description="進行中と完了済を分けつつ、特典完了と解約済を別バッジで管理します。"
@@ -225,7 +225,7 @@ export function MobileLineManager({ isConfigured, carriers, mobileLines, initial
         >
           {!isConfigured ? <ConfigurationNotice /> : null}
 
-          <div className="mt-3 grid gap-2.5 md:mt-4 md:grid-cols-2 md:gap-3 xl:grid-cols-5">
+          <div className="mt-3 grid gap-1.5 md:grid-cols-2 xl:grid-cols-5">
             <Field label="年">
               <Select value={yearFilter} onChange={(event) => setYearFilter(event.target.value)}>
                 <option value="all">すべて</option>
@@ -261,12 +261,12 @@ export function MobileLineManager({ isConfigured, carriers, mobileLines, initial
             </Field>
           </div>
 
-          <div className="mt-2.5 flex flex-wrap gap-1.5 text-[11px] text-ink-sub md:mt-3 md:gap-2 md:text-xs">
-            <span className="rounded-full border border-border-theme bg-surface-alt/70 px-3 py-1.5">表示件数 {visibleRecords.length}</span>
-            {hasLinkedFilters ? <span className="rounded-full border border-border-theme bg-accent-bg px-3 py-1.5 text-accent">ダッシュボード絞り込み</span> : null}
+          <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[11px] text-ink-sub">
+            <span className="rounded-full border border-border-theme bg-surface-alt/70 px-2.5 py-1">表示件数 {visibleRecords.length}</span>
+            {hasLinkedFilters ? <span className="rounded-full border border-border-theme bg-accent-bg px-2.5 py-1 text-accent">ダッシュボード絞り込み</span> : null}
             <button
               type="button"
-              className="rounded-full border border-border-theme bg-surface px-3 py-1.5 transition hover:bg-surface-alt"
+              className="rounded-full border border-border-theme bg-surface px-2.5 py-1 transition hover:bg-surface-alt"
               onClick={() => {
                 setYearFilter("all");
                 setMonthFilter("all");
@@ -279,7 +279,7 @@ export function MobileLineManager({ isConfigured, carriers, mobileLines, initial
             </button>
           </div>
 
-          <div className="mt-4 space-y-3 md:hidden">
+          <div className="mt-3 space-y-2.5 md:hidden">
             {visibleRecords.map((record) => {
               const rowCosts = record.monthly_costs ?? [];
               const rowTotalCost = calculateMobileLineTotalCost(record, rowCosts);
@@ -291,12 +291,12 @@ export function MobileLineManager({ isConfigured, carriers, mobileLines, initial
                   : "border-border-theme bg-surface-alt/70";
 
               return (
-                <div key={record.id} className={["rounded-[20px] border p-3", cardClass].join(" ")}>
-                  <div className="flex items-start justify-between gap-2.5">
+                <div key={record.id} className={["rounded-[22px] border p-3.5", cardClass].join(" ")}>
+                  <div className="flex items-start justify-between gap-3">
                     <div>
-                      <p className="text-[12px] text-ink-sub md:text-sm">{formatDate(record.contract_date)}</p>
+                      <p className="text-sm text-ink-sub">{formatDate(record.contract_date)}</p>
                       <h3 className="mt-0.5 text-[14px] font-semibold leading-tight">{record.title}</h3>
-                      <p className="mt-0.5 text-[12px] text-ink-sub md:mt-1 md:text-sm">
+                      <p className="mt-0.5 text-sm text-ink-sub">
                         {record.carrier?.name ?? "-"} / {maskPhoneNumber(record.phone_number)}
                       </p>
                     </div>
@@ -307,7 +307,7 @@ export function MobileLineManager({ isConfigured, carriers, mobileLines, initial
                       {!record.is_completed && record.contract_status !== "cancelled" ? <StatusBadge tone="warning">進行中</StatusBadge> : null}
                     </div>
                   </div>
-                  <div className="mt-3 grid grid-cols-2 gap-2.5 text-[12px] md:mt-4 md:gap-3 md:text-sm">
+                  <div className="mt-3 grid grid-cols-2 gap-2.5 text-[13px] md:text-sm">
                     <div>
                       <p className="text-ink-sub">総コスト</p>
                       <p className="mt-1 font-semibold">{formatCurrency(rowTotalCost)}</p>
@@ -385,8 +385,8 @@ export function MobileLineManager({ isConfigured, carriers, mobileLines, initial
             {visibleRecords.length === 0 ? <p className="text-sm text-ink-sub">該当データがありません。</p> : null}
           </div>
 
-          <div className="mt-4 hidden overflow-hidden rounded-[28px] border border-border-theme md:block">
-            <div className="grid grid-cols-[0.82fr,0.72fr,0.9fr,0.94fr,1.08fr,0.88fr,0.88fr,1.02fr,1.55fr] gap-3 bg-surface-alt px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-ink-sub">
+          <div className="mt-3 hidden overflow-hidden rounded-[24px] border border-border-theme md:block">
+            <div className="grid grid-cols-[0.82fr,0.72fr,0.9fr,0.94fr,1.08fr,0.88fr,0.88fr,1.02fr,1.55fr] gap-2.5 bg-surface-alt px-3.5 py-2.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-ink-sub">
               <span>契約日</span>
               <span>種別</span>
               <span>キャリア</span>
@@ -412,7 +412,7 @@ export function MobileLineManager({ isConfigured, carriers, mobileLines, initial
                   <div
                     key={record.id}
                     className={[
-                      "grid grid-cols-[0.82fr,0.72fr,0.9fr,0.94fr,1.08fr,0.88fr,0.88fr,1.02fr,1.55fr] gap-3 px-4 py-3.5",
+                      "grid grid-cols-[0.82fr,0.72fr,0.9fr,0.94fr,1.08fr,0.88fr,0.88fr,1.02fr,1.55fr] gap-2.5 px-3.5 py-2.5",
                       rowClass,
                     ].join(" ")}
                   >
@@ -500,17 +500,17 @@ export function MobileLineManager({ isConfigured, carriers, mobileLines, initial
         </SectionCard>
 
         <SectionCard title="追加 / 編集" description="特典完了と解約済を分けて管理し、月額履歴から総コストと利益を計算します。">
-          <div className="mb-4 grid gap-3 md:grid-cols-2">
-            <div className="rounded-[22px] border border-accent/20 bg-accent-bg p-3.5 text-sm text-accent">
+          <div className="mb-2.5 grid gap-2 md:grid-cols-2">
+            <div className="rounded-[18px] border border-accent/20 bg-accent-bg px-3.5 py-2.5 text-[13px] text-accent md:text-sm">
               総コストプレビュー: <span className="font-semibold">{formatCurrency(totalCost)}</span>
             </div>
-            <div className="rounded-[22px] border border-profit/20 bg-profit-bg p-3.5 text-sm text-profit">
+            <div className="rounded-[18px] border border-profit/20 bg-profit-bg px-3.5 py-2.5 text-[13px] text-profit md:text-sm">
               利益プレビュー: <span className="font-semibold">{formatCurrency(profit)}</span>
             </div>
           </div>
 
-          <form className="grid gap-4" onSubmit={onSubmit}>
-            <div className="grid gap-4 md:grid-cols-2">
+          <form className="grid gap-3" onSubmit={onSubmit}>
+            <div className="grid gap-3 md:grid-cols-2">
               <Field label="契約日" required error={form.formState.errors.contract_date?.message}>
                 <Input type="date" {...form.register("contract_date")} />
               </Field>
@@ -521,7 +521,7 @@ export function MobileLineManager({ isConfigured, carriers, mobileLines, initial
               </Field>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-3 md:grid-cols-2">
               <Field label="キャリア" required error={form.formState.errors.carrier_id?.message}>
                 <Select {...form.register("carrier_id")}>
                   <option value="">選択してください</option>
@@ -535,7 +535,7 @@ export function MobileLineManager({ isConfigured, carriers, mobileLines, initial
               </Field>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-3 md:grid-cols-2">
               <Field label="登録メール" error={form.formState.errors.registered_email?.message}>
                 <Input {...form.register("registered_email")} />
               </Field>
@@ -548,7 +548,7 @@ export function MobileLineManager({ isConfigured, carriers, mobileLines, initial
               <Input {...form.register("title")} />
             </Field>
 
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid gap-3 md:grid-cols-3">
               <Field label="報酬額" error={form.formState.errors.reward_amount?.message}>
                 <Input type="number" min="0" step="1" {...form.register("reward_amount")} />
               </Field>
@@ -560,7 +560,7 @@ export function MobileLineManager({ isConfigured, carriers, mobileLines, initial
               </Field>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-3 md:grid-cols-2">
               <Field label="解約日" error={form.formState.errors.cancellation_date?.message}>
                 <Input type="date" {...form.register("cancellation_date")} />
               </Field>
@@ -569,7 +569,7 @@ export function MobileLineManager({ isConfigured, carriers, mobileLines, initial
               </Field>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-3 md:grid-cols-2">
               <Field label="契約ステータス" required error={form.formState.errors.contract_status?.message}>
                 <Select {...form.register("contract_status")}>
                   {contractStatusOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
@@ -580,7 +580,7 @@ export function MobileLineManager({ isConfigured, carriers, mobileLines, initial
               </Field>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-3 md:grid-cols-2">
               <Field label="返却期限" error={form.formState.errors.return_due_date?.message}>
                 <Input type="date" {...form.register("return_due_date")} />
               </Field>
@@ -589,7 +589,7 @@ export function MobileLineManager({ isConfigured, carriers, mobileLines, initial
               </Field>
             </div>
 
-            <label className="flex items-center gap-3 rounded-[20px] border border-border-theme bg-surface-alt/70 px-4 py-3 text-sm">
+            <label className="flex items-center gap-3 rounded-[18px] border border-border-theme bg-surface-alt/70 px-3.5 py-2.5 text-sm">
               <input type="checkbox" className="h-4 w-4 rounded" {...form.register("is_completed")} />
               特典完了として扱う
             </label>
@@ -598,11 +598,11 @@ export function MobileLineManager({ isConfigured, carriers, mobileLines, initial
               <Textarea {...form.register("memo")} />
             </Field>
 
-            <div className="rounded-[22px] border border-border-theme bg-surface-alt/40 p-3.5 md:rounded-[26px] md:p-4">
-              <div className="mb-3 flex items-center justify-between gap-2.5 md:mb-4">
+            <div className="rounded-[20px] border border-border-theme bg-surface-alt/40 p-3">
+              <div className="mb-2.5 flex items-center justify-between gap-2.5">
                 <div>
                   <h3 className="font-semibold">月額履歴</h3>
-                  <p className="text-[12px] text-ink-sub md:text-sm">日割りはせず、登録済み monthly_fee の合計で扱います。</p>
+                  <p className="text-sm text-ink-sub">日割りはせず、登録済み monthly_fee の合計で扱います。</p>
                 </div>
                 <Button
                   type="button"
@@ -613,10 +613,10 @@ export function MobileLineManager({ isConfigured, carriers, mobileLines, initial
                 </Button>
               </div>
 
-              <div className="grid gap-2.5 md:gap-3">
+              <div className="grid gap-2.5">
                 {fieldArray.fields.map((field, index) => (
-                  <div key={field.id} className="grid gap-2.5 rounded-[20px] border border-border-theme bg-surface p-3 md:gap-3 md:rounded-[22px] md:p-4">
-                    <div className="grid gap-3 md:grid-cols-3">
+                  <div key={field.id} className="grid gap-2 rounded-[16px] border border-border-theme bg-surface p-2.5">
+                    <div className="grid gap-2.5 md:grid-cols-3">
                       <Field label="開始日" error={form.formState.errors.monthly_costs?.[index]?.start_date?.message}>
                         <Input type="date" {...form.register(`monthly_costs.${index}.start_date`)} />
                       </Field>
@@ -663,6 +663,3 @@ export function MobileLineManager({ isConfigured, carriers, mobileLines, initial
     </div>
   );
 }
-
-
-

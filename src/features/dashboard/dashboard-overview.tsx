@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { addMonths, endOfMonth, format, parse, subMonths } from "date-fns";
@@ -81,7 +81,7 @@ function DetailLinkPill({ href, children }: { href: string; children: ReactNode 
   return (
     <Link
       href={href}
-      className="inline-flex min-h-8 items-center justify-center rounded-full border border-border-theme bg-surface px-3 py-1.5 text-[11px] font-medium text-ink-sub transition hover:bg-surface-alt hover:text-ink md:min-h-9 md:py-2 md:text-xs"
+      className="inline-flex min-h-8 items-center justify-center rounded-full border border-border-theme bg-surface px-3 py-1.5 text-[11px] font-medium text-ink-sub transition hover:bg-surface-alt hover:text-ink md:min-h-9 md:text-xs"
     >
       {children}
     </Link>
@@ -96,18 +96,20 @@ function CategoryCard({ label, actual, estimated, actualHref, estimatedHref }: C
       <div className="flex items-center justify-between gap-2.5">
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-accent">{label}</p>
-          <p className="mt-2 text-xs text-ink-sub">実利益</p>
+          <p className="mt-1.5 text-[11px] text-ink-sub">確定 / 見込み</p>
         </div>
-        <p className="rounded-full bg-surface-alt px-2.5 py-1 text-[10px] font-medium text-ink-sub md:px-3 md:text-[11px]">合計 {formatCurrency(total)}</p>
+        <p className="rounded-full bg-surface-alt px-2.5 py-1 text-[10px] font-medium text-ink-sub md:px-3 md:text-[11px]">
+          合計 {formatCurrency(total)}
+        </p>
       </div>
-      <div className="mt-3 grid gap-2 grid-cols-2">
-        <div className="rounded-[18px] border border-profit/20 bg-profit-bg px-3 py-3">
-          <p className="text-[11px] text-ink-sub">確定</p>
-          <p className="mt-1 text-base font-semibold tracking-tight text-profit md:text-lg">{formatCurrency(actual)}</p>
+      <div className="mt-2.5 grid grid-cols-2 gap-1.5">
+        <div className="rounded-[16px] border border-profit/20 bg-profit-bg px-3 py-2.5">
+          <p className="text-[10px] text-ink-sub">確定</p>
+          <p className="mt-1 text-lg font-semibold tracking-tight text-profit">{formatCurrency(actual)}</p>
         </div>
-        <div className="rounded-[18px] border border-prospect/20 bg-prospect-bg px-3 py-3">
-          <p className="text-[11px] text-ink-sub">見込み</p>
-          <p className="mt-1 text-base font-semibold tracking-tight text-prospect md:text-lg">{formatCurrency(estimated)}</p>
+        <div className="rounded-[16px] border border-prospect/20 bg-prospect-bg px-3 py-2.5">
+          <p className="text-[10px] text-ink-sub">見込み</p>
+          <p className="mt-1 text-lg font-semibold tracking-tight text-prospect">{formatCurrency(estimated)}</p>
         </div>
       </div>
       <div className="mt-2.5 flex flex-wrap gap-1.5 md:mt-3 md:gap-2">
@@ -177,10 +179,10 @@ export function DashboardOverview({ pointActivities, resaleTransactions, mobileL
   };
 
   return (
-    <div className="space-y-3 md:space-y-5">
+    <div className="space-y-3.5 md:space-y-4">
       <SectionCard title="期間フィルタ" description="ダッシュボード全体の集計期間を切り替えます。">
-        <div className="space-y-2 md:space-y-3">
-          <div className="grid grid-cols-3 gap-1 md:grid-cols-5 xl:gap-1.5">
+        <div className="space-y-2.5">
+          <div className="grid gap-1.5 sm:grid-cols-2 xl:grid-cols-5">
             {periodItems.map((item) => {
               const isActive = item.value === preset;
 
@@ -188,7 +190,7 @@ export function DashboardOverview({ pointActivities, resaleTransactions, mobileL
                 <button
                   key={item.value}
                   type="button"
-                  className={`min-h-10 rounded-[16px] px-2 py-1.5 text-[12px] font-medium leading-tight transition md:min-h-0 md:rounded-2xl md:px-4 md:py-3 md:text-sm ${
+                  className={`rounded-xl px-3 py-2 text-[13px] font-medium transition ${
                     isActive ? "bg-nav-active text-nav-active-text" : "bg-surface-alt text-ink-sub hover:bg-surface hover:text-ink"
                   }`}
                   onClick={() => setPreset(item.value)}
@@ -200,7 +202,7 @@ export function DashboardOverview({ pointActivities, resaleTransactions, mobileL
           </div>
 
           {preset === "custom" ? (
-            <div className="grid gap-2 md:grid-cols-[1fr,1fr,auto] md:items-end">
+            <div className="grid gap-2.5 md:grid-cols-[1fr,1fr,auto] md:items-end">
               <label className="grid gap-2 text-sm">
                 <span className="font-medium text-ink">開始日</span>
                 <Input type="date" value={customFrom} onChange={(event) => setCustomFrom(event.target.value)} />
@@ -209,27 +211,27 @@ export function DashboardOverview({ pointActivities, resaleTransactions, mobileL
                 <span className="font-medium text-ink">終了日</span>
                 <Input type="date" value={customTo} onChange={(event) => setCustomTo(event.target.value)} />
               </label>
-              <div className="rounded-[18px] border border-border-theme bg-surface-alt/70 px-2.5 py-2 text-[12px] leading-tight text-ink-sub md:rounded-2xl md:px-4 md:py-3 md:text-sm">
+              <div className="rounded-xl border border-border-theme bg-surface-alt/70 px-3 py-2 text-[13px] text-ink-sub md:text-sm">
                 {customRangeInvalid ? "開始日と終了日を正しく指定してください。" : "指定期間で集計します。"}
               </div>
             </div>
           ) : null}
 
-          <div className="flex flex-wrap items-center gap-1.5 text-[12px] leading-tight text-ink-sub md:gap-3 md:text-sm">
+          <div className="flex flex-wrap items-center gap-2 text-[13px] text-ink-sub md:text-sm">
             <span className="rounded-full border border-border-theme bg-surface-alt/70 px-2.5 py-1">対象期間 {range.label}</span>
             <span>{range.from} から {range.to}</span>
           </div>
         </div>
       </SectionCard>
 
-      <div className="grid grid-cols-2 gap-2 md:gap-3">
+      <div className="grid gap-2.5 md:grid-cols-2">
         <SummaryStatCard
-          label="利益"
+          label="確定利益"
           value={metrics.periodActualTotal}
           kind="currency"
           tone="success"
           note={range.label}
-          className="min-h-[88px] md:min-h-[108px]"
+          className="min-h-[90px]"
         />
         <SummaryStatCard
           label="見込み利益"
@@ -237,12 +239,12 @@ export function DashboardOverview({ pointActivities, resaleTransactions, mobileL
           kind="currency"
           tone="warning"
           note={range.label}
-          className="min-h-[88px] md:min-h-[108px]"
+          className="min-h-[90px]"
         />
       </div>
 
-      <SectionCard title="カテゴリ別内訳" description="選択中の期間で、どのカテゴリが利益を作っているかを見やすく整理しています。">
-        <div className="grid gap-2 md:gap-3 md:grid-cols-3">
+      <SectionCard title="カテゴリ別内訳" description="選択中の期間で、どのカテゴリが確定・見込み利益を作っているかを整理しています。">
+        <div className="grid gap-2.5 md:grid-cols-3">
           <CategoryCard
             label="ポイ活"
             actual={metrics.categories.point.actual}
@@ -268,13 +270,13 @@ export function DashboardOverview({ pointActivities, resaleTransactions, mobileL
       </SectionCard>
 
       <SectionCard title="対象月サマリー" description="当月を初期表示にし、前後移動または年月選択で単月の状況を追えます。">
-        <div className="space-y-3 md:space-y-4">
+        <div className="space-y-2.5">
           <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-1.5">
               <Button
                 type="button"
                 variant="secondary"
-                className="px-3 py-1.5 text-sm md:py-2"
+                className="px-3 py-1.5"
                 onClick={() => setSelectedMonthKey(format(subMonths(selectedMonthDate, 1), "yyyy-MM"))}
               >
                 前月
@@ -282,81 +284,81 @@ export function DashboardOverview({ pointActivities, resaleTransactions, mobileL
               <Button
                 type="button"
                 variant="secondary"
-                className="px-3 py-2"
+                className="px-3 py-1.5"
                 onClick={() => setSelectedMonthKey(format(addMonths(selectedMonthDate, 1), "yyyy-MM"))}
               >
                 次月
               </Button>
             </div>
 
-            <div className="grid gap-2.5 sm:grid-cols-[180px,180px]">
-              <label className="grid gap-2 text-sm">
+            <div className="grid gap-2 sm:grid-cols-[160px,160px]">
+              <label className="grid gap-1.5 text-sm">
                 <span className="font-medium text-ink">年月</span>
                 <Input type="month" value={selectedMonthKey} onChange={(event) => setSelectedMonthKey(event.target.value)} />
               </label>
-              <label className="grid gap-2 text-sm">
+              <label className="grid gap-1.5 text-sm">
                 <span className="font-medium text-ink">候補から選択</span>
                 <Select value={selectedMonthKey} onChange={(event) => setSelectedMonthKey(event.target.value)}>
                   {monthKeys.map((monthKey) => (
-                    <option key={monthKey} value={monthKey}>{monthKey}</option>
+                    <option key={monthKey} value={monthKey}>
+                      {monthKey}
+                    </option>
                   ))}
                 </Select>
               </label>
             </div>
           </div>
 
-          <div className="rounded-[22px] border border-border-theme bg-surface-alt/50 p-3.5 md:rounded-[24px] md:p-5">
+          <div className="rounded-[20px] border border-border-theme bg-surface-alt/50 p-3.5 md:p-4">
             <div className="flex flex-col gap-2.5 sm:flex-row sm:items-start sm:justify-between">
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-accent">Month Focus</p>
-                <h3 className="mt-1.5 text-lg font-semibold tracking-tight md:mt-2 md:text-2xl">{selectedMonthLabel}</h3>
-                <p className="mt-1 text-[13px] text-ink-sub md:text-sm">完了 {monthRow.actualCount} 件 / 見込み {monthRow.estimatedCount} 件</p>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-accent">Monthly</p>
+                <h3 className="mt-2 text-xl font-semibold tracking-tight md:text-2xl">{selectedMonthLabel}</h3>
+                <p className="mt-1 text-[13px] text-ink-sub md:text-sm">確定 {monthRow.actualCount} 件 / 見込み {monthRow.estimatedCount} 件</p>
               </div>
               <p className="rounded-full bg-surface px-2.5 py-1 text-[10px] font-medium text-ink-sub md:px-3 md:py-1.5 md:text-[11px]">
                 合計 {formatCurrency(monthRow.actual + monthRow.estimated)}
               </p>
             </div>
 
-            <div className="mt-3 flex flex-wrap gap-2">
-          <DetailLinkPill href={pointLinks.monthHref}>この月のポイ活</DetailLinkPill>
-          <DetailLinkPill href={resaleLinks.monthHref}>この月の転売</DetailLinkPill>
-          <DetailLinkPill href={mobileLinks.monthHref}>この月の回線</DetailLinkPill>
-        </div>
+            <div className="mt-3 flex flex-wrap gap-1.5 md:gap-2">
+              <DetailLinkPill href={pointLinks.monthHref}>この月のポイ活</DetailLinkPill>
+              <DetailLinkPill href={resaleLinks.monthHref}>この月の転売</DetailLinkPill>
+              <DetailLinkPill href={mobileLinks.monthHref}>この月の回線</DetailLinkPill>
+            </div>
 
-
-
-            <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3 md:mt-4 md:gap-3">
-              <div className="rounded-[18px] border border-border-theme bg-surface px-3 py-2.5 text-center md:py-3">
+            <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
+              <div className="rounded-[16px] border border-border-theme bg-surface px-3 py-2.5 text-center">
                 <p className="text-[11px] text-ink-sub">件数</p>
                 <p className="mt-1 text-lg font-semibold tracking-tight">{monthRow.recordCount}</p>
               </div>
-              <div className="rounded-[18px] border border-profit/20 bg-profit-bg px-3 py-2.5 text-center md:py-3">
-                <p className="text-[11px] text-ink-sub">確定利益</p>
+              <div className="rounded-[16px] border border-profit/20 bg-profit-bg px-3 py-2.5 text-center">
+                <p className="text-[10px] text-ink-sub">確定</p>
                 <p className="mt-1 text-lg font-semibold tracking-tight text-profit">{formatCurrency(monthRow.actual)}</p>
               </div>
-              <div className="rounded-[18px] border border-prospect/20 bg-prospect-bg px-3 py-2.5 text-center md:py-3">
-                <p className="text-[11px] text-ink-sub">見込み利益</p>
+              <div className="rounded-[16px] border border-prospect/20 bg-prospect-bg px-3 py-2.5 text-center">
+                <p className="text-[11px] text-ink-sub">見込み</p>
                 <p className="mt-1 text-lg font-semibold tracking-tight text-prospect">{formatCurrency(monthRow.estimated)}</p>
               </div>
             </div>
 
-            <div className="mt-3 grid gap-2 md:mt-4 md:grid-cols-3">
-              <div className="rounded-[18px] border border-border-theme bg-surface px-3 py-2.5 md:py-3">
+            <div className="mt-3 grid gap-2 md:grid-cols-3">
+              <div className="rounded-[16px] border border-border-theme bg-surface px-3 py-2.5">
                 <div className="flex items-center justify-between gap-3">
-                  <span className="text-[13px] font-medium md:text-sm">ポイ活</span>
+                  <span className="text-sm font-medium">ポイ活</span>
                   <span className="text-xs text-ink-sub">月次内訳</span>
                 </div>
-                <div className="mt-1.5 flex items-center justify-between text-[13px] md:mt-2 md:text-sm">
+                <div className="mt-2 flex items-center justify-between text-sm">
                   <span className="text-ink-sub">確定</span>
                   <span className="font-medium text-profit">{formatCurrency(monthRow.pointActual)}</span>
                 </div>
-                <div className="mt-1 flex items-center justify-between text-[13px] md:text-sm">
+                <div className="mt-1 flex items-center justify-between text-sm">
                   <span className="text-ink-sub">見込み</span>
                   <span className="font-medium text-prospect">{formatCurrency(monthRow.pointEstimated)}</span>
                 </div>
               </div>
 
-              <div className="rounded-[18px] border border-border-theme bg-surface px-3 py-3">
+              <div className="rounded-[16px] border border-border-theme bg-surface px-3 py-2.5">
                 <div className="flex items-center justify-between gap-3">
                   <span className="text-sm font-medium">転売</span>
                   <span className="text-xs text-ink-sub">月次内訳</span>
@@ -371,7 +373,7 @@ export function DashboardOverview({ pointActivities, resaleTransactions, mobileL
                 </div>
               </div>
 
-              <div className="rounded-[18px] border border-border-theme bg-surface px-3 py-3">
+              <div className="rounded-[16px] border border-border-theme bg-surface px-3 py-2.5">
                 <div className="flex items-center justify-between gap-3">
                   <span className="text-sm font-medium">回線</span>
                   <span className="text-xs text-ink-sub">月次内訳</span>
@@ -392,4 +394,3 @@ export function DashboardOverview({ pointActivities, resaleTransactions, mobileL
     </div>
   );
 }
-
